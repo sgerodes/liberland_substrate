@@ -90,7 +90,6 @@ frame-system = { branch = "release-polkadot-v1.1.0", git = "https://github.com/p
 frame-system-rpc-runtime-api = { branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
 pallet-assets = { branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
 pallet-asset-conversion-tx-payment = { branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
-pallet-asset-tx-payment = { branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
 pallet-im-online = { default-features = false, branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
 
 # node-specific dependencies

@@ -112,6 +112,7 @@ use impls::{
 	Author, ToAccountId,
 	IdentityCallFilter, RegistryCallFilter, NftsCallFilter, OnLLMPoliticsUnlock,
 	ContainsMember, CouncilAccountCallFilter, EnsureCmp, ContractsCallFilter, SenateAccountCallFilter,
+	MinistryOfFinanceCallFilter,
 };
 
 /// Constant values used within the runtime.
@@ -155,7 +156,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	// and set impl_version to 0. If only runtime
 	// implementation changes and behavior does not, then leave spec_version as
 	// is and increment impl_version.
-	spec_version: 26,
+	spec_version: 29,
 	impl_version: 0,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -172,7 +173,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	// and set impl_version to 0. If only runtime
 	// implementation changes and behavior does not, then leave spec_version as
 	// is and increment impl_version.
-	spec_version: 26,
+	spec_version: 29,
 	impl_version: 0,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -1146,6 +1147,7 @@ where
 			frame_system::CheckNonce::<Runtime>::from(nonce),
 			frame_system::CheckWeight::<Runtime>::new(),
 			pallet_asset_conversion_tx_payment::ChargeAssetTxPayment::<Runtime>::from(0, None),
+			frame_metadata_hash_extension::CheckMetadataHash::new(false),
 		);
 		let raw_payload = SignedPayload::new(call, extra)
 			.map_err(|e| {
@@ -1264,6 +1266,7 @@ impl pallet_assets::Config for Runtime {
 	type RemoveItemsLimit = ConstU32<1000>;
 	#[cfg(feature = "runtime-benchmarks")]
 	type BenchmarkHelper = ();
+	type Citizenship = LLM;
 }
 
 ord_parameter_types! {
@@ -1291,6 +1294,7 @@ impl pallet_assets::Config<Instance2> for Runtime {
 	type CallbackHandle = ();
 	#[cfg(feature = "runtime-benchmarks")]
 	type BenchmarkHelper = ();
+	type Citizenship = LLM;
 }
 
 parameter_types! {
@@ -1360,7 +1364,7 @@ impl pallet_llm::Config for Runtime {
 }
 
 parameter_types! {
-	pub const CollectionDeposit: Balance = 100 * DOLLARS;
+	pub const CollectionDeposit: Balance = 10 * DOLLARS;
 	pub const ItemDeposit: Balance = 1 * DOLLARS;
 	pub const ApprovalsLimit: u32 = 20;
 	pub const ItemAttributesApprovalsLimit: u32 = 20;
@@ -1476,6 +1480,7 @@ parameter_types! {
 	pub const LandRegistryOfficePalletId: PalletId = PalletId(*b"off/land");
 	pub const MetaverseLandRegistryOfficePalletId: PalletId = PalletId(*b"off/meta");
 	pub const AssetRegistryOfficePalletId: PalletId = PalletId(*b"off/asse");
+	pub const MinistryOfFinanceOfficePalletId: PalletId = PalletId(*b"off/fina");
 }
 
 type IdentityOfficeInstance = pallet_office::Instance1;
@@ -1483,6 +1488,7 @@ type CompanyRegistryOfficeInstance = pallet_office::Instance2;
 type LandRegistryOfficeInstance = pallet_office::Instance3;
 type MetaverseLandRegistryOfficeInstance = pallet_office::Instance4;
 type AssetRegistryOfficeInstance = pallet_office::Instance5;
+type MinistryOfFinanceOfficeInstance = pallet_office::Instance6;
 
 impl pallet_office::Config<IdentityOfficeInstance> for Runtime {
 	type RuntimeCall = RuntimeCall;
@@ -1531,6 +1537,16 @@ impl pallet_office::Config<AssetRegistryOfficeInstance> for Runtime {
 	type ForceOrigin = EnsureRoot<AccountId>;
 	type AdminOrigin = EnsureSigned<AccountId>;
 	type CallFilter = NftsCallFilter;
+	type WeightInfo = ();
+}
+
+impl pallet_office::Config<MinistryOfFinanceOfficeInstance> for Runtime {
+	type RuntimeCall = RuntimeCall;
+	type RuntimeEvent = RuntimeEvent;
+	type PalletId = MinistryOfFinanceOfficePalletId;
+	type ForceOrigin = EnsureRoot<AccountId>;
+	type AdminOrigin = EnsureSigned<AccountId>;
+	type CallFilter = MinistryOfFinanceCallFilter;
 	type WeightInfo = ();
 }
 
@@ -1794,6 +1810,7 @@ construct_runtime!(
 		AssetConversionTxPayment: pallet_asset_conversion_tx_payment = 64,
 		ContractsRegistry: pallet_contracts_registry = 65,
 		SenateAccount: pallet_custom_account::<Instance2> = 66,
+		MinistryOfFinanceOffice: pallet_office::<Instance6> = 67,
 
 		// Sora Bridge:
 		LeafProvider: leaf_provider = 80,
@@ -1831,6 +1848,7 @@ pub type SignedExtra = (
 	frame_system::CheckNonce<Runtime>,
 	frame_system::CheckWeight<Runtime>,
 	pallet_asset_conversion_tx_payment::ChargeAssetTxPayment<Runtime>,
+	frame_metadata_hash_extension::CheckMetadataHash<Runtime>,
 );
 
 /// Unchecked extrinsic type as expected by this runtime.
@@ -1853,7 +1871,8 @@ pub type Executive = frame_executive::Executive<
 // All migrations executed on runtime upgrade as a nested tuple of types implementing
 // `OnRuntimeUpgrade`.
 type Migrations = (
-	crate::migrations::add_senate_account_pallet::Migration<Runtime>,
+	// Migrations for spec version 27 - delete when bumping to v28
+	crate::migrations::add_ministry_of_finance_office_pallet::Migration<Runtime>,
 );
 
 type EventRecord = frame_system::EventRecord<

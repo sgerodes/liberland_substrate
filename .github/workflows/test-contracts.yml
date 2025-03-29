@@ -2,6 +2,8 @@ name: Run contracts tests
 
 on:
   pull_request:
+    paths:
+      - "contracts/**"
   workflow_dispatch:
   workflow_call:
 
@@ -32,7 +34,7 @@ jobs:
         with:
           cache-all-crates: "true"
           workspaces: "contracts -> contracts/target"
-        
+
       - name: Run tests
         working-directory: contracts
         run: cargo test

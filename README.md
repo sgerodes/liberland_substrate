@@ -48,6 +48,9 @@ cd liberland_substrate
 ```
 cargo test --features runtime-benchmarks --no-fail-fast
 ```
+> [!NOTE]
+> When run on a powerful machine `benchmark_machine_fails_with_slow_hardware`
+> test may fail. It is safe to ignore this.
 
 ### Build and run development node
 ```

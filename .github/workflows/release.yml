@@ -71,7 +71,7 @@ jobs:
           chain: liberland
           package: kitchensink-runtime
           runtime_dir: ./substrate/bin/node/runtime
-          tag: "1.74.0"
+          tag: "1.81.0"
 
       - name: Check version
         id: version
@@ -99,7 +99,7 @@ jobs:
           chain: liberland
           package: kitchensink-runtime
           runtime_dir: ./substrate/bin/node/runtime
-          tag: "1.74.0"
+          tag: "1.81.0"
 
       - name: Bastiat Summary
         run: |

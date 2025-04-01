@@ -20,6 +20,9 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y build-essential git clang curl libssl-dev llvm libudev-dev make protobuf-compiler pkg-config git-restore-mtime
 
+      - name: Install Rust 1.79.0 (for try-runtime-cli build)
+        run: rustup toolchain install 1.79.0 --profile minimal
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -29,16 +32,16 @@ jobs:
 
       - name: Build try-runtime bastiat runtime
         run: cargo build --release --features try-runtime,testnet-runtime -p kitchensink-runtime
-      
+
       - name: Install try-runtime CLI
-        run: cargo install --git https://github.com/paritytech/try-runtime-cli --locked --tag v0.7.0
+        run: cargo +1.79.0 install --git https://github.com/paritytech/try-runtime-cli --locked --tag v0.7.0
 
       - name: try-runtime on-runtime-upgrade bastiat
         run: try-runtime --runtime ./target/release/wbuild/kitchensink-runtime/kitchensink_runtime.wasm on-runtime-upgrade live --uri wss://archive.testchain.liberland.org:443
 
       - name: try-runtime fast-forward bastiat
         run: try-runtime --runtime ./target/release/wbuild/kitchensink-runtime/kitchensink_runtime.wasm fast-forward --n-blocks 5 --blocktime 6000 live --uri wss://archive.testchain.liberland.org:443
-        
+
       - name: Build try-runtime mainnet runtime
         run: cargo build --release --features try-runtime -p kitchensink-runtime
 

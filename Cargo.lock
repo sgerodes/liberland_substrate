@@ -5455,7 +5455,7 @@ dependencies = [
 
 [[package]]
 name = "node-cli"
-version = "29.0.0"
+version = "30.0.0"
 dependencies = [
  "array-bytes",
  "assert_cmd",

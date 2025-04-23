@@ -22,9 +22,18 @@ fn main() {
 
 #[cfg(all(feature = "std", feature = "metadata-hash"))]
 fn main() {
-	substrate_wasm_builder::WasmBuilder::init_with_defaults()
-		.enable_metadata_hash("LLD", 12)
-		.build()
+	#[cfg(not(feature = "testnet-runtime"))]
+	{
+		substrate_wasm_builder::WasmBuilder::init_with_defaults()
+			.enable_metadata_hash("LLD", 12)
+			.build()
+	}
+	#[cfg(feature = "testnet-runtime")]
+	{
+		substrate_wasm_builder::WasmBuilder::init_with_defaults()
+			.enable_metadata_hash("LDN", 12)
+			.build()
+	}
 }
 
 #[cfg(not(feature = "std"))]

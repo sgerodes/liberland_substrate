@@ -17,8 +17,8 @@
   "properties": {
     "displayName": "Liberland",
     "network": "Liberland",
-    "prefix": 56,
-    "ss58Format": 56,
+    "prefix": 42,
+    "ss58Format": 42,
     "standardAccount": "*25519",
     "tokenDecimals": 12,
     "tokenSymbol": "LLD",

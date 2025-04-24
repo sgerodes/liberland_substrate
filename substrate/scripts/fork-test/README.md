@@ -12,7 +12,7 @@
 
 1. Check current testnet version.
 2. Checkout repository for this version. For example, if testnet has runtime in version `v27.0.0`, checkout tag `v27.0.0`
-3. Build binary with embedded testnet runtime: `cargo build --release -F testnet-runtime --features metadata-hash`:
+3. Build binary with embedded testnet runtime: `cargo build --release --features testnet-runtime --features metadata-hash`:
   * copy it to tmp to make it easier: `cp ./target/release/substrate-node ./substrate/scripts/fork-test/liberland-fork-substrate/tmp/liberland-testnet-v27.0.0`
 4. Download runtime you want to test from [GitHub Releases](https://github.com/liberland/liberland_substrate/releases)
   * copy it to tmp to make it easier:  `cp bastiat-v28.0.0.wasm ./liberland-fork-substrate/tmp/bastiat-v28.0.0.wasm`

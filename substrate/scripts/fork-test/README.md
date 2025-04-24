@@ -17,7 +17,7 @@
 4. Download runtime you want to test from [GitHub Releases](https://github.com/liberland/liberland_substrate/releases)
   * copy it to tmp to make it easier:  `cp bastiat-v28.0.0.wasm ./liberland-fork-substrate/tmp/bastiat-v28.0.0.wasm`
   * if building runtime yourself,
-    * Checkout the branch with the newer version to test (v28 in this example)and build it `cargo build --release -F testnet-runtime --features metadata-hash`
+    * Checkout the branch with the newer version to test (v28 in this example)and build it `cargo build --release --features testnet-runtime --features metadata-hash`
     * Copy to tmp `cp ./target/release/wbuild/kitchensink-runtime/kitchensink_runtime.compact.compressed.wasm ./substrate/scripts/fork-test/liberland-fork-substrate/tmp/liberland-testnet-v28.0.0.wasm`
 Checkout repository for version you want to test. For example, if we're testing runtime `v15.0.0`, checkout tag `v15.0.0`.
 5. Make sure you're not running another instance of Liberland Network - port 9944 should be free.

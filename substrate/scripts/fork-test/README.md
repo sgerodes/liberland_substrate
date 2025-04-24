@@ -38,7 +38,7 @@ Checkout repository for version you want to test. For example, if we're testing 
 1. Check current mainnet version.
 2. Download the binary with the same version as one running currently on mainnet from [GitHub Releases](https://github.com/liberland/liberland_substrate/releases)
    * copy it to tmp to make it easier: `cp linux_x86_build /tmp/liberland-mainnet-v27.0.0`
-   * if building binary yourself `cargo build --release -F --features metadata-hash`
+   * if building binary yourself `cargo build --release --features metadata-hash`
    * `cp ./target/release/substrate-node ./substrate/scripts/fork-test/liberland-fork-substrate/tmp/liberland-mainnet-v27.0.0`
 4. Download runtime you want to test from [GitHub Releases](https://github.com/liberland/liberland_substrate/releases) - it will be a different version than the binary!
    * copy it to tmp to make it easier:  `cp mainnet-v28.0.0.wasm /tmp/mainnet-v28.0.0.wasm`

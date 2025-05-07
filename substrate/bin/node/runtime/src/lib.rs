@@ -126,6 +126,10 @@ mod voter_bags;
 /// Runtime API definition for assets.
 pub mod assets_api;
 
+/// Frontier
+mod precompiles;
+use precompiles::FrontierPrecompiles;
+
 // Make the WASM binary available.
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));

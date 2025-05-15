@@ -25,6 +25,7 @@
 // `construct_runtime!` does a lot of recursion and requires us to increase the limits.
 #![recursion_limit = "1024"]
 
+use bridge_types::LiberlandAssetId;
 use codec::{Decode, Encode, MaxEncodedLen};
 use frame_election_provider_support::{
 	bounds::{ElectionBounds, ElectionBoundsBuilder},
@@ -33,18 +34,17 @@ use frame_election_provider_support::{
 use frame_support::{
 	construct_runtime,
 	dispatch::DispatchClass,
-	instances::{Instance2},
-	ord_parameter_types,
-	pallet_prelude::{InherentData, Get},
 	inherent::CheckInherentsResult,
+	instances::Instance2,
+	ord_parameter_types,
+	pallet_prelude::{Get, InherentData},
 	parameter_types,
 	traits::{
-		Everything,
 		fungible::{Balanced, Credit},
-        tokens::nonfungibles_v2::Inspect,
-		AsEnsureOriginWithArg, ConstBool, ConstU128, ConstU16, ConstU32, MapSuccess,
-		Currency, EitherOf, EitherOfDiverse, Imbalance, InstanceFilter,
-		KeyOwnerProofSystem, LockIdentifier, OnUnbalanced
+		tokens::nonfungibles_v2::Inspect,
+		AsEnsureOriginWithArg, ConstBool, ConstU128, ConstU16, ConstU32, Currency, EitherOf,
+		EitherOfDiverse, Everything, FindAuthor, Imbalance, InstanceFilter, KeyOwnerProofSystem,
+		LockIdentifier, MapSuccess, OnUnbalanced,
 	},
 	weights::{
 		constants::{
@@ -52,13 +52,13 @@ use frame_support::{
 		},
 		ConstantMultiplier, IdentityFee, Weight,
 	},
-	BoundedVec, PalletId,
+	BoundedVec, ConsensusEngineId, PalletId,
 };
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
-	EnsureRoot, EnsureSigned, EnsureWithSuccess, EnsureSignedBy
+	EnsureRoot, EnsureSigned, EnsureSignedBy, EnsureWithSuccess,
 };
-use node_primitives::Moment;
+use node_primitives::{Moment, Signature};
 use pallet_asset_conversion::{NativeOrAssetId, NativeOrAssetIdConverter};
 use pallet_election_provider_multi_phase::SolutionAccuracyOf;
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
@@ -70,26 +70,28 @@ use sp_api::impl_runtime_apis;
 use sp_authority_discovery::AuthorityId as AuthorityDiscoveryId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata, H160, H256, U256};
+use sp_runtime::traits::Keccak256;
+use sp_runtime::transaction_validity::TransactionLongevity;
 use sp_runtime::{
 	create_runtime_str,
 	curve::PiecewiseLinear,
 	generic, impl_opaque_keys,
 	traits::{
-		self, BlakeTwo256, Block as BlockT, Bounded, NumberFor, OpaqueKeys,
-		SaturatedConversion, StaticLookup, AccountIdConversion, AccountIdLookup, IdentityLookup, IdentifyAccount, Verify, DispatchInfoOf, PostDispatchInfoOf
+		self, AccountIdConversion, AccountIdLookup, BlakeTwo256, Block as BlockT, Bounded,
+		DispatchInfoOf, IdentifyAccount, IdentityLookup, NumberFor, OpaqueKeys, PostDispatchInfoOf,
+		SaturatedConversion, StaticLookup, Verify,
 	},
-	transaction_validity::{TransactionPriority, TransactionSource, TransactionValidity, TransactionValidityError},
-	ApplyExtrinsicResult, FixedPointNumber, Perbill, Percent, Permill, Perquintill,
-	RuntimeDebug
+	transaction_validity::{
+		TransactionPriority, TransactionSource, TransactionValidity, TransactionValidityError,
+	},
+	ApplyExtrinsicResult, FixedPointNumber, Perbill, Percent, Permill, Perquintill, RuntimeDebug,
 };
+use sp_std::marker::PhantomData;
 use sp_std::prelude::*;
 #[cfg(any(feature = "std", test))]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
 use static_assertions::const_assert;
-use sp_runtime::traits::Keccak256;
-use sp_runtime::transaction_validity::TransactionLongevity;
-use bridge_types::LiberlandAssetId;
 
 pub use bridge_types::{GenericNetworkId, SubNetworkId};
 
@@ -108,15 +110,14 @@ pub use sp_runtime::BuildStorage;
 pub mod impls;
 mod migrations;
 use impls::{
-	Author, ToAccountId,
-	IdentityCallFilter, RegistryCallFilter, NftsCallFilter, OnLLMPoliticsUnlock,
-	ContainsMember, CouncilAccountCallFilter, EnsureCmp, ContractsCallFilter, SenateAccountCallFilter,
-	MinistryOfFinanceCallFilter,
+	Author, ContainsMember, ContractsCallFilter, CouncilAccountCallFilter, EnsureCmp,
+	IdentityCallFilter, MinistryOfFinanceCallFilter, NftsCallFilter, OnLLMPoliticsUnlock,
+	RegistryCallFilter, SenateAccountCallFilter, ToAccountId,
 };
 
 /// Constant values used within the runtime.
 pub mod constants;
-use constants::{currency::*, time::*, llm::*};
+use constants::{currency::*, llm::*, time::*};
 use sp_runtime::generic::Era;
 
 /// Generated voter bag information.
@@ -137,14 +138,14 @@ use pallet_ethereum::{
 	TransactionData,
 };
 use pallet_evm::{
-	Account as EVMAccount, EnsureAccountId20, FeeCalculator, IdentityAddressMapping, Runner,
+	Account as EVMAccount, EnsureAddressTruncated, FeeCalculator, HashedAddressMapping, Runner,
 };
 
 /// Type of block number.
 pub type BlockNumber = u32;
 
 /// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
-pub type Signature = EthereumSignature;
+// pub type Signature = Signature;
 
 /// Some way of identifying an account on the chain. We intentionally make it equivalent
 /// to the public key of our transaction signing scheme.
@@ -288,10 +289,8 @@ const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
 // 	Weight::from_parts(WEIGHT_REF_TIME_PER_SECOND, u64::MAX);
 /// We allow for 2000ms of compute with a 6 second average block time.
 pub const WEIGHT_MILLISECS_PER_BLOCK: u64 = 2000;
-pub const MAXIMUM_BLOCK_WEIGHT: Weight = Weight::from_parts(
-	WEIGHT_MILLISECS_PER_BLOCK * WEIGHT_REF_TIME_PER_MILLIS,
-	u64::MAX,
-);
+pub const MAXIMUM_BLOCK_WEIGHT: Weight =
+	Weight::from_parts(WEIGHT_MILLISECS_PER_BLOCK * WEIGHT_REF_TIME_PER_MILLIS, u64::MAX);
 pub const MAXIMUM_BLOCK_LENGTH: u32 = 5 * 1024 * 1024;
 
 parameter_types! {
@@ -333,8 +332,8 @@ impl frame_system::Config for Runtime {
 	type Hash = Hash;
 	type Hashing = BlakeTwo256;
 	type AccountId = AccountId;
-	// type Lookup = AccountIdLookup<AccountId, ()>;
-	type Lookup = IdentityLookup<AccountId>;
+	type Lookup = AccountIdLookup<AccountId, ()>;
+	// type Lookup = IdentityLookup<AccountId>;
 	type Block = Block;
 	type RuntimeEvent = RuntimeEvent;
 	type BlockHashCount = BlockHashCount;
@@ -435,20 +434,17 @@ impl InstanceFilter<RuntimeCall> for ProxyType {
 			ProxyType::Any => true,
 			ProxyType::NonTransfer => !matches!(
 				c,
-				RuntimeCall::Balances(..) |
-					RuntimeCall::Assets(..) |
-					RuntimeCall::Nfts(..)
+				RuntimeCall::Balances(..) | RuntimeCall::Assets(..) | RuntimeCall::Nfts(..)
 			),
 			ProxyType::Governance => matches!(
 				c,
-				RuntimeCall::Democracy(..) |
-					RuntimeCall::Council(..) |
-					RuntimeCall::TechnicalCommittee(..) |
-					RuntimeCall::Elections(..) |
-					RuntimeCall::Treasury(..)
+				RuntimeCall::Democracy(..)
+					| RuntimeCall::Council(..)
+					| RuntimeCall::TechnicalCommittee(..)
+					| RuntimeCall::Elections(..)
+					| RuntimeCall::Treasury(..)
 			),
-			ProxyType::Staking =>
-				matches!(c, RuntimeCall::Staking(..)),
+			ProxyType::Staking => matches!(c, RuntimeCall::Staking(..)),
 		}
 	}
 	fn is_superset(&self, o: &Self) -> bool {
@@ -477,25 +473,16 @@ impl pallet_proxy::Config for Runtime {
 	type AnnouncementDepositFactor = AnnouncementDepositFactor;
 }
 
-type EnsureCouncilMajority = pallet_collective::EnsureProportionMoreThan<AccountId, CouncilCollective, 1, 2>;
-type EnsureSenateMajority = pallet_collective::EnsureProportionMoreThan<AccountId, SenateCollective, 1, 2>;
-type EnsureRootOrHalfCouncil = EitherOfDiverse<
-	EnsureRoot<AccountId>,
-	EnsureCouncilMajority,
->;
-type EnsureSenateOrCouncilMajority = EitherOfDiverse<
-	EnsureSenateMajority,
-	EnsureCouncilMajority,
->;
-type EnsureRootOrHalfSenate = EitherOfDiverse<
-	EnsureRoot<AccountId>,
-	EnsureSenateMajority,
->;
+type EnsureCouncilMajority =
+	pallet_collective::EnsureProportionMoreThan<AccountId, CouncilCollective, 1, 2>;
+type EnsureSenateMajority =
+	pallet_collective::EnsureProportionMoreThan<AccountId, SenateCollective, 1, 2>;
+type EnsureRootOrHalfCouncil = EitherOfDiverse<EnsureRoot<AccountId>, EnsureCouncilMajority>;
+type EnsureSenateOrCouncilMajority = EitherOfDiverse<EnsureSenateMajority, EnsureCouncilMajority>;
+type EnsureRootOrHalfSenate = EitherOfDiverse<EnsureRoot<AccountId>, EnsureSenateMajority>;
 
-type EnsureRootOrHalfSenateOrCustomCouncil = EitherOfDiverse<
-	EnsureRootOrHalfSenate,
-	EnsureSignedBy<CouncilAccount, AccountId>
->;
+type EnsureRootOrHalfSenateOrCustomCouncil =
+	EitherOfDiverse<EnsureRootOrHalfSenate, EnsureSignedBy<CouncilAccount, AccountId>>;
 
 parameter_types! {
 	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
@@ -712,7 +699,7 @@ impl pallet_staking::Config for Runtime {
 	type WeightInfo = pallet_staking::weights::SubstrateWeight<Runtime>;
 	type BenchmarkingConfig = StakingBenchmarkingConfig;
 	type Citizenship = LLM;
-	#[cfg(any(test,feature = "runtime-benchmarks"))]
+	#[cfg(any(test, feature = "runtime-benchmarks"))]
 	type LLInitializer = LiberlandInitializer;
 }
 
@@ -794,8 +781,8 @@ impl Get<Option<BalancingConfig>> for OffchainRandomBalancing {
 			max => {
 				let seed = sp_io::offchain::random_seed();
 				let random = <u32>::decode(&mut TrailingZeroInput::new(&seed))
-					.expect("input is padded with zeroes; qed") %
-					max.saturating_add(1);
+					.expect("input is padded with zeroes; qed")
+					% max.saturating_add(1);
 				random as usize
 			},
 		};
@@ -914,11 +901,10 @@ impl pallet_democracy::Config for Runtime {
 	type SubmitOrigin = EnsureSigned<AccountId>;
 	/// Two thirds of the technical committee can have an ExternalMajority/ExternalDefault vote
 	/// be tabled immediately and with a shorter voting/enactment period.
-	type FastTrackOrigin =
-		EitherOfDiverse<
-			pallet_collective::EnsureProportionAtLeast<AccountId, TechnicalCollective, 2, 3>,
-			EnsureCouncilMajority,
-		>;
+	type FastTrackOrigin = EitherOfDiverse<
+		pallet_collective::EnsureProportionAtLeast<AccountId, TechnicalCollective, 2, 3>,
+		EnsureCouncilMajority,
+	>;
 	type InstantOrigin =
 		pallet_collective::EnsureProportionAtLeast<AccountId, TechnicalCollective, 1, 1>;
 	type InstantAllowed = frame_support::traits::ConstBool<true>;
@@ -931,12 +917,9 @@ impl pallet_democracy::Config for Runtime {
 		EitherOf<
 			EnsureSenateMajority,
 			pallet_collective::EnsureProportionAtLeast<AccountId, TechnicalCollective, 1, 1>,
-		>
+		>,
 	>;
-	type BlacklistOrigin = EitherOfDiverse<
-		EnsureRoot<AccountId>,
-		EnsureSenateOrCouncilMajority
-	>;
+	type BlacklistOrigin = EitherOfDiverse<EnsureRoot<AccountId>, EnsureSenateOrCouncilMajority>;
 
 	// Any single technical committee member may veto a coming council proposal, however they can
 	// only do it once and it lasts only for the cool-off period.
@@ -1110,11 +1093,7 @@ impl pallet_treasury::Config for Runtime {
 	type SpendFunds = ();
 	type WeightInfo = pallet_treasury::weights::SubstrateWeight<Runtime>;
 	type MaxApprovals = MaxApprovals;
-	type SpendOrigin = EnsureWithSuccess<
-		EnsureRootOrHalfCouncil,
-		AccountId,
-		MaxBalance
-	>;
+	type SpendOrigin = EnsureWithSuccess<EnsureRootOrHalfCouncil, AccountId, MaxBalance>;
 }
 
 parameter_types! {
@@ -1128,7 +1107,6 @@ parameter_types! {
 parameter_types! {
 	pub const ChildBountyValueMinimum: Balance = 1 * DOLLARS;
 }
-
 
 parameter_types! {
 	pub const DepositPerItem: Balance = deposit(1, 0);
@@ -1301,7 +1279,6 @@ impl pallet_identity::Config for Runtime {
 	type Citizenship = LLM;
 }
 
-
 parameter_types! {
 	pub const AssetDeposit: Balance = 100 * DOLLARS;
 	pub const ApprovalDeposit: Balance = 1 * DOLLARS;
@@ -1419,10 +1396,7 @@ impl pallet_llm::Config for Runtime {
 	type AssetSymbol = AssetSymbol;
 	type InflationEventInterval = InflationEventInterval;
 	type InflationEventReleaseFactor = InflationEventReleaseFactor;
-	type SenateOrigin = EitherOfDiverse<
-		EnsureRoot<AccountId>,
-		EnsureSenateMajority
-	>;
+	type SenateOrigin = EitherOfDiverse<EnsureRoot<AccountId>, EnsureSenateMajority>;
 	type OnLLMPoliticsUnlock = OnLLMPoliticsUnlock;
 	type WeightInfo = ();
 	type MaxCourts = ConstU32<2>;
@@ -1497,10 +1471,7 @@ impl pallet_liberland_legislation::Config for Runtime {
 	type Citizenship = LLM;
 	type ConstitutionOrigin = pallet_democracy::EnsureReferendumProportionAtLeast<Self, 2, 3>;
 	type InternationalTreatyOrigin = EnsureRootOrHalfCouncil;
-	type LowTierDeleteOrigin = EitherOf<
-		EnsureRoot<AccountId>,
-		EnsureSenateMajority
-	>;
+	type LowTierDeleteOrigin = EitherOf<EnsureRoot<AccountId>, EnsureSenateMajority>;
 	type LLInitializer = LiberlandInitializer;
 	type WeightInfo = pallet_liberland_legislation::weights::SubstrateWeight<Runtime>;
 }
@@ -1515,7 +1486,7 @@ parameter_types! {
 
 type EnsureMembersAsAccountId<I, A> = MapSuccess<
 	pallet_collective::EnsureProportionMoreThan<AccountId, I, 1, 2>, // half of collective
-	ToAccountId<(), A>
+	ToAccountId<(), A>,
 >;
 
 type RegistryEnsureRegistrar = EitherOf<
@@ -1710,6 +1681,20 @@ impl pallet_contracts_registry::Config for Runtime {
 const BLOCK_GAS_LIMIT: u64 = 75_000_000;
 const MAX_POV_SIZE: u64 = 5 * 1024 * 1024;
 
+pub struct FindAuthorTruncated<F>(sp_std::marker::PhantomData<F>);
+impl<F: FindAuthor<u32>> FindAuthor<H160> for FindAuthorTruncated<F> {
+	fn find_author<'a, I>(digests: I) -> Option<H160>
+	where
+		I: 'a + IntoIterator<Item = (ConsensusEngineId, &'a [u8])>,
+	{
+		if let Some(author_index) = F::find_author(digests) {
+			let authority_id = Babe::authorities()[author_index as usize].clone();
+			return Some(H160::from_slice(&authority_id.encode()[4..24]));
+		}
+
+		None
+	}
+}
 parameter_types! {
 	pub BlockGasLimit: U256 = U256::from(BLOCK_GAS_LIMIT);
 	pub const GasLimitPovSizeRatio: u64 = BLOCK_GAS_LIMIT.saturating_div(MAX_POV_SIZE);
@@ -1722,9 +1707,9 @@ impl pallet_evm::Config for Runtime {
 	type GasWeightMapping = pallet_evm::FixedGasWeightMapping<Self>;
 	type WeightPerGas = WeightPerGas;
 	type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
-	type CallOrigin = EnsureAccountId20;
-	type WithdrawOrigin = EnsureAccountId20;
-	type AddressMapping = IdentityAddressMapping;
+	type CallOrigin = EnsureAddressTruncated;
+	type WithdrawOrigin = EnsureAddressTruncated;
+	type AddressMapping = HashedAddressMapping<BlakeTwo256>;
 	type Currency = Balances;
 	type RuntimeEvent = RuntimeEvent;
 	type PrecompilesType = FrontierPrecompiles<Self>;
@@ -1734,8 +1719,7 @@ impl pallet_evm::Config for Runtime {
 	type Runner = pallet_evm::runner::stack::Runner<Self>;
 	type OnChargeTransaction = ();
 	type OnCreate = ();
-	type FindAuthor = pallet_session::FindAccountFromAuthorIndex<Self, Babe>;
-	// type FindAuthor = FindAuthorTruncated<Aura>;
+	type FindAuthor = FindAuthorTruncated<Babe>;
 	type GasLimitPovSizeRatio = GasLimitPovSizeRatio;
 	type Timestamp = Timestamp;
 	type WeightInfo = pallet_evm::weights::SubstrateWeight<Self>;
@@ -1788,7 +1772,7 @@ impl pallet_base_fee::Config for Runtime {
 }
 
 impl pallet_hotfix_sufficients::Config for Runtime {
-	type AddressMapping = IdentityAddressMapping;
+	type AddressMapping = HashedAddressMapping<BlakeTwo256>;
 	type WeightInfo = pallet_hotfix_sufficients::weights::SubstrateWeight<Self>;
 }
 
@@ -2038,10 +2022,9 @@ pub type SignedExtra = (
 
 /// Unchecked extrinsic type as expected by this runtime.
 pub type UncheckedExtrinsic =
-	fp_self_contained::UncheckedExtrinsic<Address, RuntimeCall, Signature, SignedExtra>;
+	generic::UncheckedExtrinsic<Address, RuntimeCall, Signature, SignedExtra>;
 /// Extrinsic type that has already been checked.
-pub type CheckedExtrinsic =
-	fp_self_contained::CheckedExtrinsic<AccountId, RuntimeCall, SignedExtra, H160>;
+pub type CheckedExtrinsic = generic::CheckedExtrinsic<AccountId, RuntimeCall, SignedExtra>;
 /// The payload being signed in transactions.
 pub type SignedPayload = generic::SignedPayload<RuntimeCall, SignedExtra>;
 /// Executive: handles dispatch to the various modules.
@@ -2065,64 +2048,6 @@ type EventRecord = frame_system::EventRecord<
 	<Runtime as frame_system::Config>::RuntimeEvent,
 	<Runtime as frame_system::Config>::Hash,
 >;
-
-impl fp_self_contained::SelfContainedCall for RuntimeCall {
-	type SignedInfo = H160;
-
-	fn is_self_contained(&self) -> bool {
-		match self {
-			RuntimeCall::Ethereum(call) => call.is_self_contained(),
-			_ => false,
-		}
-	}
-
-	fn check_self_contained(&self) -> Option<Result<Self::SignedInfo, TransactionValidityError>> {
-		match self {
-			RuntimeCall::Ethereum(call) => call.check_self_contained(),
-			_ => None,
-		}
-	}
-
-	fn validate_self_contained(
-		&self,
-		info: &Self::SignedInfo,
-		dispatch_info: &DispatchInfoOf<RuntimeCall>,
-		len: usize,
-	) -> Option<TransactionValidity> {
-		match self {
-			RuntimeCall::Ethereum(call) => call.validate_self_contained(info, dispatch_info, len),
-			_ => None,
-		}
-	}
-
-	fn pre_dispatch_self_contained(
-		&self,
-		info: &Self::SignedInfo,
-		dispatch_info: &DispatchInfoOf<RuntimeCall>,
-		len: usize,
-	) -> Option<Result<(), TransactionValidityError>> {
-		match self {
-			RuntimeCall::Ethereum(call) => {
-				call.pre_dispatch_self_contained(info, dispatch_info, len)
-			}
-			_ => None,
-		}
-	}
-
-	fn apply_self_contained(
-		self,
-		info: Self::SignedInfo,
-	) -> Option<sp_runtime::DispatchResultWithInfo<PostDispatchInfoOf<Self>>> {
-		match self {
-			call @ RuntimeCall::Ethereum(pallet_ethereum::Call::transact { .. }) => {
-				Some(call.dispatch(RuntimeOrigin::from(
-					pallet_ethereum::RawOrigin::EthereumTransaction(info),
-				)))
-			}
-			_ => None,
-		}
-	}
-}
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benches {

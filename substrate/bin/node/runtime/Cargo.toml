@@ -110,7 +110,6 @@ pallet-contracts-registry = { path = "../../../frame/contracts-registry", defaul
 liberland-extension-runtime = { path = "../../../../liberland-extension/runtime", default-features = false }
 
 # Frontier
-fp-account = { version = "1.0.0-dev", default-features = false, features = ["serde"], branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
 fp-evm = { version = "3.0.0-dev", default-features = false, features = ["serde"], branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
 fp-rpc = { version = "3.0.0-dev", default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
 fp-self-contained = { version = "1.0.0-dev", default-features = false, features = ["serde"], branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
@@ -220,7 +219,6 @@ std = [
 	"substrate-wasm-builder",
 
 	# Frontier
-	"fp-account/std",
 	"fp-evm/std",
 	"fp-rpc/std",
 	"fp-self-contained/std",
@@ -347,7 +345,6 @@ try-runtime = [
 	"sp-runtime/try-runtime",
 
 	# Frontier
-	"fp-account/std",
 	"fp-evm/std",
 	"fp-rpc/std",
 	"fp-self-contained/std",

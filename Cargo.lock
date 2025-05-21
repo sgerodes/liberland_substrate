@@ -4306,7 +4306,6 @@ dependencies = [
  "bridge-data-signer",
  "bridge-types",
  "dispatch",
- "fp-account",
  "fp-evm",
  "fp-rpc",
  "fp-self-contained",

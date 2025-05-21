@@ -27,7 +27,7 @@ use kitchensink_runtime::{
 	constants::currency::*, constants::llm::*, wasm_binary_unwrap,
 	BabeConfig, BalancesConfig, Block, CouncilConfig,
 	DemocracyConfig, ElectionsConfig, ImOnlineConfig,
-	MaxNominations, SessionConfig, SessionKeys,
+	MaxNominations, SessionConfig, opaque::SessionKeys,
 	StakerStatus, StakingConfig, SudoConfig, SystemConfig,
 	TechnicalCommitteeConfig, LiberlandInitializerConfig,
 	CompanyRegistryOfficePalletId, CompanyRegistryOfficeConfig,
@@ -35,7 +35,7 @@ use kitchensink_runtime::{
 	IdentityOfficePalletId, AssetRegistryOfficeConfig,
 	LandRegistryOfficePalletId, AssetRegistryOfficePalletId,
 	MetaverseLandRegistryOfficeConfig, MetaverseLandRegistryOfficePalletId,
-	SenateConfig, MinistryOfFinanceOfficeConfig,
+	SenateConfig, MinistryOfFinanceOfficeConfig, EVMChainIdConfig,
 	impls::{RegistryCallFilter, IdentityCallFilter, NftsCallFilter},
 };
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
@@ -465,6 +465,12 @@ pub fn testnet_genesis(
 		},
 		substrate_bridge_outbound_channel: Default::default(),
 		sora_bridge_app: Default::default(),
+		// Frontier
+		ethereum: Default::default(),
+		evm: Default::default(),
+		evm_chain_id: EVMChainIdConfig::default(),
+		base_fee: Default::default(),
+		dynamic_fee: Default::default(),
 	}
 }
 

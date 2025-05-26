@@ -5671,6 +5671,7 @@ dependencies = [
  "clap 4.4.2",
  "clap_complete",
  "criterion",
+ "fp-evm",
  "frame-benchmarking-cli",
  "frame-metadata-hash-extension",
  "frame-system",

@@ -36,3 +36,6 @@ sp-keystore = { branch = "release-polkadot-v1.1.0", git = "https://github.com/pa
 sp-runtime = { branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
 substrate-frame-rpc-system = { branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
 substrate-state-trie-migration-rpc = { branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
+
+# Frontier
+fp-rpc = { version = "3.0.0-dev", default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }

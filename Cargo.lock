@@ -5798,6 +5798,7 @@ dependencies = [
 name = "node-rpc"
 version = "3.0.0-dev"
 dependencies = [
+ "fp-rpc",
  "jsonrpsee",
  "node-primitives",
  "pallet-transaction-payment-rpc",

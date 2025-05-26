@@ -493,7 +493,8 @@ pub fn testnet_genesis(
 			},
 			..Default::default()
 		},
-		evm_chain_id: EVMChainIdConfig::default(),
+		// TODO: Set proper chain_id before deployment
+		evm_chain_id: EVMChainIdConfig { chain_id: 4321, ..Default::default() },
 		base_fee: Default::default(),
 		dynamic_fee: Default::default(),
 	}

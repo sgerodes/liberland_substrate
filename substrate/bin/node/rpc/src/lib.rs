@@ -42,6 +42,7 @@ use sc_consensus_grandpa::{
 };
 use sc_rpc::SubscriptionTaskExecutor;
 pub use sc_rpc_api::DenyUnsafe;
+use sc_transaction_pool::ChainApi;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
@@ -49,6 +50,11 @@ use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 use sp_consensus::SelectChain;
 use sp_consensus_babe::BabeApi;
 use sp_keystore::KeystorePtr;
+
+mod consensus_data_providers;
+use consensus_data_providers::BabeConsensusDataProvider;
+mod eth;
+use eth::EthDeps;
 
 /// Extra dependencies for BABE.
 pub struct BabeDeps {
@@ -73,7 +79,7 @@ pub struct GrandpaDeps<B> {
 }
 
 /// Full client dependencies.
-pub struct FullDeps<C, P, SC, B> {
+pub struct FullDeps<C, P, SC, B, A: ChainApi, CT, CIDP> {
 	/// The client instance to use.
 	pub client: Arc<C>,
 	/// Transaction pool instance.
@@ -90,10 +96,12 @@ pub struct FullDeps<C, P, SC, B> {
 	pub grandpa: GrandpaDeps<B>,
 	/// The backend used by the node.
 	pub backend: Arc<B>,
+	/// Ethereum-compatibility specific dependencies.
+	pub eth: EthDeps<Block, C, P, A, CT, CIDP>,
 }
 
 /// Instantiate all Full RPC extensions.
-pub fn create_full<C, P, SC, B>(
+pub fn create_full<C, P, SC, B, A, CT, CIDP>(
 	FullDeps {
 		client,
 		pool,
@@ -103,7 +111,8 @@ pub fn create_full<C, P, SC, B>(
 		babe,
 		grandpa,
 		backend,
-	}: FullDeps<C, P, SC, B>,
+		eth,
+	}: FullDeps<C, P, SC, B, A, CT, CIDP>,
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
 	C: ProvideRuntimeApi<Block>
@@ -122,13 +131,12 @@ where
 	SC: SelectChain<Block> + 'static,
 	B: sc_client_api::Backend<Block> + Send + Sync + 'static,
 	B::State: sc_client_api::backend::StateBackend<sp_runtime::traits::HashingFor<Block>>,
+	A: ChainApi + 'static,
 {
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
 	use sc_consensus_babe_rpc::{Babe, BabeApiServer};
 	use sc_consensus_grandpa_rpc::{Grandpa, GrandpaApiServer};
-	use sc_rpc::{
-		dev::{Dev, DevApiServer},
-	};
+	use sc_rpc::dev::{Dev, DevApiServer};
 	use sc_rpc_spec_v2::chain_spec::{ChainSpec, ChainSpecApiServer};
 	use sc_sync_state_rpc::{SyncState, SyncStateApiServer};
 	use substrate_frame_rpc_system::{System, SystemApiServer};

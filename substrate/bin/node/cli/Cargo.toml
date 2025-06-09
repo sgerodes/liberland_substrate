@@ -168,6 +168,7 @@ cli = [
 	"substrate-build-script-utils",
 	"substrate-frame-cli",
 	"try-runtime-cli",
+	"fc-db/rocksdb",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking-cli/runtime-benchmarks",

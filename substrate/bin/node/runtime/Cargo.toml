@@ -110,20 +110,20 @@ pallet-contracts-registry = { path = "../../../frame/contracts-registry", defaul
 liberland-extension-runtime = { path = "../../../../liberland-extension/runtime", default-features = false }
 
 # Frontier
-fp-evm = { version = "3.0.0-dev", default-features = false, features = ["serde"], branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
-fp-rpc = { version = "3.0.0-dev", default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
-fp-self-contained = { version = "1.0.0-dev", default-features = false, features = ["serde"], branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+fp-evm = { default-features = false, features = ["serde"], branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+fp-rpc = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+fp-self-contained = { default-features = false, features = ["serde"], branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
 
 # Frontier FRAME
-pallet-base-fee = { version = "1.0.0", default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
-pallet-dynamic-fee = { version = "4.0.0-dev", default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
-pallet-ethereum = { version = "4.0.0-dev", default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
-pallet-evm = { version = "6.0.0-dev", default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
-pallet-evm-chain-id = { version = "1.0.0-dev", default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
-pallet-evm-precompile-modexp = { version = "2.0.0-dev", default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
-pallet-evm-precompile-sha3fips = { version = "2.0.0-dev", default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
-pallet-evm-precompile-simple = { version = "2.0.0-dev", default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
-pallet-hotfix-sufficients = { version = "1.0.0", default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+pallet-base-fee = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+pallet-dynamic-fee = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+pallet-ethereum = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+pallet-evm = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+pallet-evm-chain-id = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+pallet-evm-precompile-modexp = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+pallet-evm-precompile-sha3fips = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+pallet-evm-precompile-simple = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+pallet-hotfix-sufficients = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
 
 # Sora Bridge:
 substrate-bridge-app = { git = "https://github.com/sora-xor/sora2-common.git", branch = "liberland", default-features = false }
@@ -345,20 +345,15 @@ try-runtime = [
 	"sp-runtime/try-runtime",
 
 	# Frontier
-	"fp-evm/std",
-	"fp-rpc/std",
-	"fp-self-contained/std",
+	"fp-self-contained/try-runtime",
 
 	# Frontier FRAME
-	"pallet-base-fee/std",
-	"pallet-dynamic-fee/std",
-	"pallet-ethereum/std",
-	"pallet-evm/std",
-	"pallet-evm-chain-id/std",
-	"pallet-evm-precompile-modexp/std",
-	"pallet-evm-precompile-sha3fips/std",
-	"pallet-evm-precompile-simple/std",
-	"pallet-hotfix-sufficients/std",
+	"pallet-base-fee/try-runtime",
+	"pallet-dynamic-fee/try-runtime",
+	"pallet-ethereum/try-runtime",
+	"pallet-evm/try-runtime",
+	"pallet-evm-chain-id/try-runtime",
+	"pallet-hotfix-sufficients/try-runtime",
 
 	# Sora Bridge:
 	"substrate-bridge-app/try-runtime",

@@ -16,6 +16,39 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+
+/// The ethereum-compatibility configuration used to run a node.
+#[derive(Clone, Debug, clap::Parser)]
+pub struct EthConfiguration {
+	/// Maximum number of logs in a query.
+	#[arg(long, default_value = "10000")]
+	pub max_past_logs: u32,
+
+	/// Maximum fee history cache size.
+	#[arg(long, default_value = "2048")]
+	pub fee_history_limit: u64,
+
+	#[arg(long)]
+	pub enable_dev_signer: bool,
+
+	/// The dynamic-fee pallet target gas price set by block author
+	#[arg(long, default_value = "1")]
+	pub target_gas_price: u64,
+
+	/// Maximum allowed gas limit will be `block.gas_limit * execute_gas_limit_multiplier`
+	/// when using eth_call/eth_estimateGas.
+	#[arg(long, default_value = "10")]
+	pub execute_gas_limit_multiplier: u64,
+
+	/// Size in bytes of the LRU cache for block data.
+	#[arg(long, default_value = "50")]
+	pub eth_log_block_cache: usize,
+
+	/// Size in bytes of the LRU cache for transactions statuses data.
+	#[arg(long, default_value = "50")]
+	pub eth_statuses_cache: usize,
+}
+
 /// An overarching CLI command definition.
 #[derive(Debug, clap::Parser)]
 pub struct Cli {
@@ -40,6 +73,9 @@ pub struct Cli {
 	#[allow(missing_docs)]
 	#[clap(flatten)]
 	pub storage_monitor: sc_storage_monitor::StorageMonitorParams,
+
+	#[command(flatten)]
+	pub eth: EthConfiguration,
 }
 
 /// Possible subcommands of the main binary.

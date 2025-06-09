@@ -31,6 +31,7 @@
 #![warn(missing_docs)]
 
 pub mod chain_spec;
+pub mod eth;
 
 #[macro_use]
 pub mod service;
@@ -45,3 +46,4 @@ mod command;
 pub use cli::*;
 #[cfg(feature = "cli")]
 pub use command::*;
+

@@ -671,9 +671,9 @@ pub fn new_full_base(
 }
 
 /// Builds a new service for a full client.
-pub fn new_full(config: Configuration, eth: EthConfiguration, cli: Cli) -> Result<TaskManager, ServiceError> {
+pub fn new_full(config: Configuration, cli: Cli) -> Result<TaskManager, ServiceError> {
 	let database_source = config.database.clone();
-	let task_manager = new_full_base(config, eth, cli.no_hardware_benchmarks, |_, _| ())
+	let task_manager = new_full_base(config, cli.eth, cli.no_hardware_benchmarks, |_, _| ())
 		.map(|NewFullBase { task_manager, .. }| task_manager)?;
 
 	sc_storage_monitor::StorageMonitorService::try_spawn(
@@ -689,6 +689,7 @@ pub fn new_full(config: Configuration, eth: EthConfiguration, cli: Cli) -> Resul
 #[cfg(test)]
 mod tests {
 	use crate::service::{new_full_base, NewFullBase};
+	use crate::cli::EthConfiguration;
 	use codec::Encode;
 	use kitchensink_runtime::{
 		constants::{currency::CENTS, time::SLOT_DURATION},
@@ -748,9 +749,11 @@ mod tests {
 			chain_spec,
 			|config| {
 				let mut setup_handles = None;
+				let eth_configuration = EthConfiguration { ..Default::default() };
 				let NewFullBase { task_manager, client, network, sync, transaction_pool, .. } =
 					new_full_base(
 						config,
+						eth_configuration,
 						false,
 						|block_import: &sc_consensus_babe::BabeBlockImport<Block, _, _>,
 						 babe_link: &sc_consensus_babe::BabeLink<Block>| {
@@ -936,8 +939,9 @@ mod tests {
 		sc_service_test::consensus(
 			crate::chain_spec::tests::integration_test_config_with_two_authorities(),
 			|config| {
+				let eth_configuration = EthConfiguration { ..Default::default() };
 				let NewFullBase { task_manager, client, network, sync, transaction_pool, .. } =
-					new_full_base(config, false, |_, _| ())?;
+					new_full_base(config, eth_configuration, false, |_, _| ())?;
 				Ok(sc_service_test::TestNetComponents::new(
 					task_manager,
 					client,

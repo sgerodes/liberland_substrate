@@ -586,6 +586,7 @@ pub fn local_testnet_config() -> ChainSpec {
 pub(crate) mod tests {
 	use super::*;
 	use crate::service::{new_full_base, NewFullBase};
+	use crate::cli::EthConfiguration;
 	use sc_service_test;
 	use sp_runtime::BuildStorage;
 
@@ -641,8 +642,9 @@ pub(crate) mod tests {
 		sp_tracing::try_init_simple();
 
 		sc_service_test::connectivity(integration_test_config_with_two_authorities(), |config| {
+			let eth_configuration: EthConfiguration = Default::default();
 			let NewFullBase { task_manager, client, network, sync, transaction_pool, .. } =
-				new_full_base(config, false, |_, _| ())?;
+				new_full_base(config, eth_configuration, false, |_, _| ())?;
 			Ok(sc_service_test::TestNetComponents::new(
 				task_manager,
 				client,

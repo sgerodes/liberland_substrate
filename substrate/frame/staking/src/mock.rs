@@ -15,38 +15,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// File has been modified by Liberland in 2023. All modifications by Liberland are distributed under the MIT license.
+// File has been modified by Liberland in 2023. All modifications by Liberland are distributed under
+// the MIT license.
 
 // You should have received a copy of the MIT license along with this program. If not, see https://opensource.org/licenses/MIT
 
 //! Test utilities
 
 use crate::{self as pallet_staking, *};
-use frame_system::{EnsureRoot, EnsureSignedBy, EnsureSigned};
 use frame_election_provider_support::{
 	bounds::{ElectionBounds, ElectionBoundsBuilder},
 	onchain, SequentialPhragmen, VoteWeight,
 };
 use frame_support::{
-	assert_ok, parameter_types, ord_parameter_types,
+	assert_ok, ord_parameter_types, parameter_types,
 	traits::{
-		AsEnsureOriginWithArg, EitherOfDiverse, ConstU32, ConstU64, ConstU128, Currency, FindAuthor, Get, Hooks, Imbalance,
-		OnUnbalanced, OneSessionHandler,
+		AsEnsureOriginWithArg, ConstU128, ConstU32, ConstU64, Currency, EitherOfDiverse,
+		FindAuthor, Get, Hooks, Imbalance, OnUnbalanced, OneSessionHandler,
 	},
 	weights::constants::RocksDbWeight,
 	PalletId,
 };
+use frame_system::{EnsureRoot, EnsureSigned, EnsureSignedBy};
+use pallet_asset_conversion::{NativeOrAssetId, NativeOrAssetIdConverter};
 use sp_core::H256;
 use sp_io;
 use sp_runtime::{
 	curve::PiecewiseLinear,
 	testing::{TestSignature, UintAuthorityId},
 	traits::{IdentityLookup, Zero},
-	Permill,
-	BuildStorage,
+	BuildStorage, Permill,
 };
 use sp_staking::offence::{DisableStrategy, OffenceDetails, OnOffenceHandler};
-use pallet_asset_conversion::{NativeOrAssetId, NativeOrAssetIdConverter};
 
 pub const INIT_TIMESTAMP: u64 = 30_000;
 pub const BLOCK_TIME: u64 = 1000;
@@ -617,35 +617,35 @@ impl ExtBuilder {
 		let mut storage = frame_system::GenesisConfig::<Test>::default().build_storage().unwrap();
 
 		let balances = vec![
-				(1, 10 * self.balance_factor),
-				(2, 20 * self.balance_factor),
-				(3, 300 * self.balance_factor),
-				(4, 400 * self.balance_factor),
-				// controllers (still used in some tests. Soon to be deprecated).
-				(10, self.balance_factor),
-				(20, self.balance_factor),
-				(30, self.balance_factor),
-				(40, self.balance_factor),
-				(50, self.balance_factor),
-				// stashes
-				(11, self.balance_factor * 1000),
-				(21, self.balance_factor * 2000),
-				(31, self.balance_factor * 2000),
-				(41, self.balance_factor * 2000),
-				(51, self.balance_factor * 2000),
-				// optional nominator
-				(100, self.balance_factor * 2000),
-				(101, self.balance_factor * 2000),
-				// aux accounts
-				(60, self.balance_factor),
-				(61, self.balance_factor * 2000),
-				(70, self.balance_factor),
-				(71, self.balance_factor * 2000),
-				(80, self.balance_factor),
-				(81, self.balance_factor * 2000),
-				// This allows us to have a total_payout different from 0.
-				(999, 1_000_000_000_000),
-			];
+			(1, 10 * self.balance_factor),
+			(2, 20 * self.balance_factor),
+			(3, 300 * self.balance_factor),
+			(4, 400 * self.balance_factor),
+			// controllers (still used in some tests. Soon to be deprecated).
+			(10, self.balance_factor),
+			(20, self.balance_factor),
+			(30, self.balance_factor),
+			(40, self.balance_factor),
+			(50, self.balance_factor),
+			// stashes
+			(11, self.balance_factor * 1000),
+			(21, self.balance_factor * 2000),
+			(31, self.balance_factor * 2000),
+			(41, self.balance_factor * 2000),
+			(51, self.balance_factor * 2000),
+			// optional nominator
+			(100, self.balance_factor * 2000),
+			(101, self.balance_factor * 2000),
+			// aux accounts
+			(60, self.balance_factor),
+			(61, self.balance_factor * 2000),
+			(70, self.balance_factor),
+			(71, self.balance_factor * 2000),
+			(80, self.balance_factor),
+			(81, self.balance_factor * 2000),
+			// This allows us to have a total_payout different from 0.
+			(999, 1_000_000_000_000),
+		];
 		let llm_balances = vec![
 			(1, 5000, 5000),
 			(2, 5000, 5000),
@@ -663,7 +663,9 @@ impl ExtBuilder {
 		];
 		let _ = pallet_balances::GenesisConfig::<Test> { balances: balances.clone() }
 			.assimilate_storage(&mut storage);
-		pallet_llm::GenesisConfig::<Test>::default().assimilate_storage(&mut storage).unwrap();
+		pallet_llm::GenesisConfig::<Test>::default()
+			.assimilate_storage(&mut storage)
+			.unwrap();
 		pallet_liberland_initializer::GenesisConfig::<Test> {
 			citizenship_registrar: Some(0),
 			initial_citizens: llm_balances,

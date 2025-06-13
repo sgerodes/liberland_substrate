@@ -15,7 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under the MIT license.
+// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under
+// the MIT license.
 
 // You should have received a copy of the MIT license along with this program. If not, see https://opensource.org/licenses/MIT
 
@@ -803,7 +804,10 @@ pub mod pallet {
 			let judgements = id.judgements.len();
 			let extra_fields = id.info.additional.len();
 			<IdentityOf<T>>::insert(&target, id);
-			Self::deposit_event(Event::JudgementGiven { target: target.clone(), registrar_index: reg_index });
+			Self::deposit_event(Event::JudgementGiven {
+				target: target.clone(),
+				registrar_index: reg_index,
+			});
 
 			T::Citizenship::identity_changed(was_citizen, &target);
 			Ok(Some(T::WeightInfo::provide_judgement(judgements as u32, extra_fields as u32))
@@ -1003,13 +1007,9 @@ impl<T: Config> Pallet<T> {
 	pub fn set_identity_no_deposit(
 		target: &T::AccountId,
 		judgements: sp_runtime::BoundedVec<(u32, Judgement<BalanceOf<T>>), T::MaxRegistrars>,
-		info: IdentityInfo<T::MaxAdditionalFields>
+		info: IdentityInfo<T::MaxAdditionalFields>,
 	) -> frame_support::pallet_prelude::Weight {
-		let id = Registration {
-			judgements,
-			deposit: 0u8.into(),
-			info,
-		};
+		let id = Registration { judgements, deposit: 0u8.into(), info };
 		let weight = T::WeightInfo::set_identity(
 			id.judgements.len() as u32,
 			id.info.additional.len() as u32,

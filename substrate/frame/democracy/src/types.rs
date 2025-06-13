@@ -15,7 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under the MIT license.
+// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under
+// the MIT license.
 
 // You should have received a copy of the MIT license along with this program. If not, see https://opensource.org/licenses/MIT
 
@@ -25,7 +26,10 @@ use crate::{AccountVote, Conviction, Vote, VoteThreshold};
 use codec::{Decode, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 use sp_runtime::{
-	traits::{Bounded, CheckedAdd, CheckedDiv, CheckedMul, CheckedSub, Saturating, Zero, AtLeast32BitUnsigned},
+	traits::{
+		AtLeast32BitUnsigned, Bounded, CheckedAdd, CheckedDiv, CheckedMul, CheckedSub, Saturating,
+		Zero,
+	},
 	RuntimeDebug,
 };
 
@@ -113,8 +117,8 @@ impl<
 		Self {
 			ayes: if vote.aye { votes } else { Zero::zero() },
 			nays: if vote.aye { Zero::zero() } else { votes },
-			aye_voters: if vote.aye { voters*10000 } else { 0 },
-			nay_voters: if vote.aye { 0 } else { voters*10000 },
+			aye_voters: if vote.aye { voters * 10000 } else { 0 },
+			nay_voters: if vote.aye { 0 } else { voters * 10000 },
 			turnout: capital,
 		}
 	}
@@ -128,12 +132,12 @@ impl<
 				match vote.aye {
 					true => {
 						self.ayes = self.ayes.checked_add(&votes)?;
-						self.aye_voters = self.aye_voters.checked_add(voters*10000)?;
+						self.aye_voters = self.aye_voters.checked_add(voters * 10000)?;
 					},
 					false => {
 						self.nays = self.nays.checked_add(&votes)?;
-						self.nay_voters = self.nay_voters.checked_add(voters*10000)?;
-					}
+						self.nay_voters = self.nay_voters.checked_add(voters * 10000)?;
+					},
 				}
 			},
 			AccountVote::Split { aye, nay } => {
@@ -146,12 +150,16 @@ impl<
 				let sum: Balance = aye.votes.checked_add(&nay.votes)?;
 				self.aye_voters = self.aye_voters.checked_add(
 					<Balance as TryInto<u64>>::try_into(
-						multiplier.checked_mul(&aye.votes)?
-							.checked_div(&sum)?).ok()?)?;
+						multiplier.checked_mul(&aye.votes)?.checked_div(&sum)?,
+					)
+					.ok()?,
+				)?;
 				self.nay_voters = self.nay_voters.checked_add(
 					<Balance as TryInto<u64>>::try_into(
-						multiplier.checked_mul(&nay.votes)?
-							.checked_div(&sum)?).ok()?)?;
+						multiplier.checked_mul(&nay.votes)?.checked_div(&sum)?,
+					)
+					.ok()?,
+				)?;
 			},
 		}
 		Some(())
@@ -166,12 +174,12 @@ impl<
 				match vote.aye {
 					true => {
 						self.ayes = self.ayes.checked_sub(&votes)?;
-						self.aye_voters = self.aye_voters.checked_sub(voters*10000)?;
+						self.aye_voters = self.aye_voters.checked_sub(voters * 10000)?;
 					},
 					false => {
 						self.nays = self.nays.checked_sub(&votes)?;
-						self.nay_voters = self.nay_voters.checked_sub(voters*10000)?;
-					}
+						self.nay_voters = self.nay_voters.checked_sub(voters * 10000)?;
+					},
 				}
 			},
 			AccountVote::Split { aye, nay } => {
@@ -183,12 +191,20 @@ impl<
 				let multiplier: Balance = 10000u32.into();
 				self.aye_voters = self.aye_voters.checked_sub(
 					<Balance as TryInto<u64>>::try_into(
-						multiplier.checked_mul(&aye.votes)?
-							.checked_div(&aye.votes.checked_add(&nay.votes)?)?).ok()?)?;
+						multiplier
+							.checked_mul(&aye.votes)?
+							.checked_div(&aye.votes.checked_add(&nay.votes)?)?,
+					)
+					.ok()?,
+				)?;
 				self.nay_voters = self.nay_voters.checked_sub(
 					<Balance as TryInto<u64>>::try_into(
-						multiplier.checked_mul(&nay.votes)?
-							.checked_div(&aye.votes.checked_add(&nay.votes)?)?).ok()?)?;
+						multiplier
+							.checked_mul(&nay.votes)?
+							.checked_div(&aye.votes.checked_add(&nay.votes)?)?,
+					)
+					.ok()?,
+				)?;
 			},
 		}
 		Some(())
@@ -200,11 +216,11 @@ impl<
 		match approve {
 			true => {
 				self.ayes = self.ayes.saturating_add(delegations.votes);
-				self.aye_voters = self.aye_voters.saturating_add(delegations.voters*10000);
+				self.aye_voters = self.aye_voters.saturating_add(delegations.voters * 10000);
 			},
 			false => {
 				self.nays = self.nays.saturating_add(delegations.votes);
-				self.nay_voters = self.nay_voters.saturating_add(delegations.voters*10000);
+				self.nay_voters = self.nay_voters.saturating_add(delegations.voters * 10000);
 			},
 		}
 		Some(())
@@ -216,11 +232,11 @@ impl<
 		match approve {
 			true => {
 				self.ayes = self.ayes.saturating_sub(delegations.votes);
-				self.aye_voters = self.aye_voters.saturating_sub(delegations.voters*10000);
+				self.aye_voters = self.aye_voters.saturating_sub(delegations.voters * 10000);
 			},
 			false => {
 				self.nays = self.nays.saturating_sub(delegations.votes);
-				self.nay_voters = self.nay_voters.saturating_sub(delegations.voters*10000);
+				self.nay_voters = self.nay_voters.saturating_sub(delegations.voters * 10000);
 			},
 		}
 		Some(())
@@ -262,7 +278,14 @@ impl<BlockNumber, Proposal, Balance: Default> ReferendumInfo<BlockNumber, Propos
 		threshold: VoteThreshold,
 		delay: BlockNumber,
 	) -> Self {
-		let s = ReferendumStatus { end, proposal, dispatch_origin, threshold, delay, tally: Tally::default() };
+		let s = ReferendumStatus {
+			end,
+			proposal,
+			dispatch_origin,
+			threshold,
+			delay,
+			tally: Tally::default(),
+		};
 		ReferendumInfo::Ongoing(s)
 	}
 }

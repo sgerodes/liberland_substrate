@@ -25,13 +25,13 @@ use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{AsEnsureOriginWithArg, ConstU32, ConstU64},
 };
+use liberland_traits::MockCitizenshipChecker;
 use sp_core::H256;
 use sp_io::storage;
 use sp_runtime::{
 	traits::{BlakeTwo256, IdentityLookup},
 	BuildStorage,
 };
-use liberland_traits::MockCitizenshipChecker;
 
 type Block = frame_system::mocking::MockBlock<Test>;
 

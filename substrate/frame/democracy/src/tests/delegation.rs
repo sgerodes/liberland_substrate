@@ -15,7 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under the MIT license.
+// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under
+// the MIT license.
 
 // You should have received a copy of the MIT license along with this program. If not, see https://opensource.org/licenses/MIT
 
@@ -36,31 +37,52 @@ fn single_proposal_should_work_with_delegation() {
 		assert_ok!(Democracy::delegate(RuntimeOrigin::signed(2), 1, Conviction::None, 20));
 		let r = 0;
 		assert_ok!(Democracy::vote(RuntimeOrigin::signed(1), r, aye(1)));
-		assert_eq!(tally(r), Tally { ayes: 110, nays: 0, turnout: 110, aye_voters: 20000, nay_voters: 0 });
+		assert_eq!(
+			tally(r),
+			Tally { ayes: 110, nays: 0, turnout: 110, aye_voters: 20000, nay_voters: 0 }
+		);
 
 		// Delegate a second vote.
 		assert_ok!(Democracy::delegate(RuntimeOrigin::signed(3), 1, Conviction::None, 30));
-		assert_eq!(tally(r), Tally { ayes: 140, nays: 0, turnout: 140, aye_voters: 30000, nay_voters: 0 });
+		assert_eq!(
+			tally(r),
+			Tally { ayes: 140, nays: 0, turnout: 140, aye_voters: 30000, nay_voters: 0 }
+		);
 
 		// Reduce first vote.
 		assert_ok!(Democracy::delegate(RuntimeOrigin::signed(2), 1, Conviction::None, 10));
-		assert_eq!(tally(r), Tally { ayes: 130, nays: 0, turnout: 130, aye_voters: 30000, nay_voters: 0 });
+		assert_eq!(
+			tally(r),
+			Tally { ayes: 130, nays: 0, turnout: 130, aye_voters: 30000, nay_voters: 0 }
+		);
 
 		// Second vote delegates to first; we don't do tiered delegation, so it doesn't get used.
 		assert_ok!(Democracy::delegate(RuntimeOrigin::signed(3), 2, Conviction::None, 30));
-		assert_eq!(tally(r), Tally { ayes: 100, nays: 0, turnout: 100, aye_voters: 20000, nay_voters: 0 });
+		assert_eq!(
+			tally(r),
+			Tally { ayes: 100, nays: 0, turnout: 100, aye_voters: 20000, nay_voters: 0 }
+		);
 
 		// Main voter cancels their vote
 		assert_ok!(Democracy::remove_vote(RuntimeOrigin::signed(1), r));
-		assert_eq!(tally(r), Tally { ayes: 0, nays: 0, aye_voters: 00000, nay_voters: 00000, turnout: 0 });
+		assert_eq!(
+			tally(r),
+			Tally { ayes: 0, nays: 0, aye_voters: 00000, nay_voters: 00000, turnout: 0 }
+		);
 
 		// First delegator delegates half funds with conviction; nothing changes yet.
 		assert_ok!(Democracy::delegate(RuntimeOrigin::signed(2), 1, Conviction::Locked1x, 10));
-		assert_eq!(tally(r), Tally { ayes: 0, nays: 0, aye_voters: 00000, nay_voters: 00000, turnout: 0 });
+		assert_eq!(
+			tally(r),
+			Tally { ayes: 0, nays: 0, aye_voters: 00000, nay_voters: 00000, turnout: 0 }
+		);
 
 		// Main voter reinstates their vote
 		assert_ok!(Democracy::vote(RuntimeOrigin::signed(1), r, aye(1)));
-		assert_eq!(tally(r), Tally { ayes: 100, nays: 0, turnout: 100, aye_voters: 20000, nay_voters: 0 });
+		assert_eq!(
+			tally(r),
+			Tally { ayes: 100, nays: 0, turnout: 100, aye_voters: 20000, nay_voters: 0 }
+		);
 	});
 }
 
@@ -93,7 +115,10 @@ fn cyclic_delegation_should_unwind() {
 		assert_ok!(Democracy::vote(RuntimeOrigin::signed(1), r, nay(1)));
 
 		// Delegated vote is counted.
-		assert_eq!(tally(r), Tally { ayes: 300, nays: 110, turnout: 410, aye_voters: 10000, nay_voters: 20000  });
+		assert_eq!(
+			tally(r),
+			Tally { ayes: 300, nays: 110, turnout: 410, aye_voters: 10000, nay_voters: 20000 }
+		);
 	});
 }
 
@@ -110,13 +135,19 @@ fn single_proposal_should_work_with_vote_and_delegation() {
 		let r = 0;
 		assert_ok!(Democracy::vote(RuntimeOrigin::signed(1), r, aye(1)));
 		assert_ok!(Democracy::vote(RuntimeOrigin::signed(2), r, nay(2)));
-		assert_eq!(tally(r), Tally { ayes: 90, nays: 200, turnout: 290, aye_voters: 10000, nay_voters: 10000  });
+		assert_eq!(
+			tally(r),
+			Tally { ayes: 90, nays: 200, turnout: 290, aye_voters: 10000, nay_voters: 10000 }
+		);
 
 		// Delegate vote.
 		assert_ok!(Democracy::remove_vote(RuntimeOrigin::signed(2), r));
 		assert_ok!(Democracy::delegate(RuntimeOrigin::signed(2), 1, Conviction::None, 20));
 		// Delegated vote replaces the explicit vote.
-		assert_eq!(tally(r), Tally { ayes: 110, nays: 0, turnout: 110 , aye_voters: 20000, nay_voters: 0 });
+		assert_eq!(
+			tally(r),
+			Tally { ayes: 110, nays: 0, turnout: 110, aye_voters: 20000, nay_voters: 0 }
+		);
 	});
 }
 
@@ -136,7 +167,10 @@ fn single_proposal_should_work_with_undelegation() {
 		assert_ok!(Democracy::vote(RuntimeOrigin::signed(1), r, aye(1)));
 
 		// Delegated vote is not counted.
-		assert_eq!(tally(r), Tally { ayes: 90, nays: 0, turnout: 90, aye_voters: 10000, nay_voters: 0  });
+		assert_eq!(
+			tally(r),
+			Tally { ayes: 90, nays: 0, turnout: 90, aye_voters: 10000, nay_voters: 0 }
+		);
 	});
 }
 
@@ -148,11 +182,17 @@ fn single_proposal_should_work_with_delegation_and_vote() {
 		// Delegate, undelegate and vote.
 		assert_ok!(Democracy::vote(RuntimeOrigin::signed(1), r, aye(1)));
 		assert_ok!(Democracy::delegate(RuntimeOrigin::signed(2), 1, Conviction::None, 20));
-		assert_eq!(tally(r), Tally { ayes: 110, nays: 0, turnout: 110, aye_voters: 20000, nay_voters: 0  });
+		assert_eq!(
+			tally(r),
+			Tally { ayes: 110, nays: 0, turnout: 110, aye_voters: 20000, nay_voters: 0 }
+		);
 		assert_ok!(Democracy::undelegate(RuntimeOrigin::signed(2)));
 		assert_ok!(Democracy::vote(RuntimeOrigin::signed(2), r, aye(2)));
 		// Delegated vote is not counted.
-		assert_eq!(tally(r), Tally { ayes: 290, nays: 0, turnout: 290, aye_voters: 20000, nay_voters: 0  });
+		assert_eq!(
+			tally(r),
+			Tally { ayes: 290, nays: 0, turnout: 290, aye_voters: 20000, nay_voters: 0 }
+		);
 	});
 }
 
@@ -165,7 +205,10 @@ fn conviction_should_be_honored_in_delegation() {
 		assert_ok!(Democracy::delegate(RuntimeOrigin::signed(2), 1, Conviction::Locked6x, 20));
 		assert_ok!(Democracy::vote(RuntimeOrigin::signed(1), r, aye(1)));
 		// Delegated vote is huge.
-		assert_eq!(tally(r), Tally { ayes: 110, nays: 0, turnout: 110, aye_voters: 20000, nay_voters: 0  });
+		assert_eq!(
+			tally(r),
+			Tally { ayes: 110, nays: 0, turnout: 110, aye_voters: 20000, nay_voters: 0 }
+		);
 	});
 }
 
@@ -181,7 +224,10 @@ fn split_vote_delegation_should_be_ignored() {
 			AccountVote::Split { aye: 10, nay: 0 }
 		));
 		// Delegated vote is huge.
-		assert_eq!(tally(r), Tally { ayes: 10, nays: 0, turnout: 10, aye_voters: 10000, nay_voters: 0  });
+		assert_eq!(
+			tally(r),
+			Tally { ayes: 10, nays: 0, turnout: 10, aye_voters: 10000, nay_voters: 0 }
+		);
 	});
 }
 
@@ -194,7 +240,10 @@ fn redelegation_keeps_lock() {
 		assert_ok!(Democracy::delegate(RuntimeOrigin::signed(2), 1, Conviction::Locked6x, 20));
 		assert_ok!(Democracy::vote(RuntimeOrigin::signed(1), r, aye(1)));
 		// Delegated vote is huge.
-		assert_eq!(tally(r), Tally { ayes: 110, nays: 0, turnout: 110, aye_voters: 20000, nay_voters: 0  });
+		assert_eq!(
+			tally(r),
+			Tally { ayes: 110, nays: 0, turnout: 110, aye_voters: 20000, nay_voters: 0 }
+		);
 
 		let mut prior_lock = vote::PriorLock::default();
 

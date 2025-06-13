@@ -15,7 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under the MIT license.
+// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under
+// the MIT license.
 
 // You should have received a copy of the MIT license along with this program. If not, see https://opensource.org/licenses/MIT
 
@@ -58,7 +59,9 @@ mod v0 {
 pub mod v1 {
 	use super::*;
 
-	#[derive(Encode, MaxEncodedLen, Decode, Default, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
+	#[derive(
+		Encode, MaxEncodedLen, Decode, Default, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo,
+	)]
 	pub struct Tally<Balance> {
 		/// The number of aye votes, expressed in terms of post-conviction lock-vote.
 		pub ayes: Balance,
@@ -86,7 +89,10 @@ pub mod v1 {
 	#[storage_alias]
 	pub type PublicProps<T: Config> = StorageValue<
 		Pallet<T>,
-		BoundedVec<(PropIndex, BoundedCallOf<T>, <T as frame_system::Config>::AccountId), <T as pallet::Config>::MaxProposals>,
+		BoundedVec<
+			(PropIndex, BoundedCallOf<T>, <T as frame_system::Config>::AccountId),
+			<T as pallet::Config>::MaxProposals,
+		>,
 		ValueQuery,
 	>;
 
@@ -229,7 +235,12 @@ pub mod v2 {
 		Pallet<T>,
 		Twox64Concat,
 		<T as frame_system::Config>::AccountId,
-		v2::Voting<BalanceOf<T>, <T as frame_system::Config>::AccountId, BlockNumberFor<T>, <T as pallet::Config>::MaxVotes>,
+		v2::Voting<
+			BalanceOf<T>,
+			<T as frame_system::Config>::AccountId,
+			BlockNumberFor<T>,
+			<T as pallet::Config>::MaxVotes,
+		>,
 	>;
 
 	/// Migration for adding origin type to proposals and referendums.
@@ -260,8 +271,12 @@ pub mod v2 {
 				return weight
 			}
 
-			ReferendumInfoOf::<T>::translate::<v1::ReferendumInfo::<BlockNumberFor<T>, BoundedCallOf<T>, BalanceOf<T>>, _>(
-				|index, old: v1::ReferendumInfo<BlockNumberFor<T>, BoundedCallOf<T>, BalanceOf<T>>| {
+			ReferendumInfoOf::<T>::translate::<
+				v1::ReferendumInfo<BlockNumberFor<T>, BoundedCallOf<T>, BalanceOf<T>>,
+				_,
+			>(
+				|index,
+				 old: v1::ReferendumInfo<BlockNumberFor<T>, BoundedCallOf<T>, BalanceOf<T>>| {
 					weight.saturating_accrue(T::DbWeight::get().reads_writes(1, 1));
 					log::info!(target: TARGET, "migrating referendum #{:?}", &index);
 					Some(match old {
@@ -275,10 +290,23 @@ pub mod v2 {
 								tally: Tally {
 									ayes: status.tally.ayes,
 									nays: status.tally.nays,
-									aye_voters: status.tally.ayes.checked_mul(&10000u32.into())?.try_into().unwrap_or_default(), // this is OK - voters are only used for DispatchOrigin::Rich, so we lose nothing if these are invalid
-									nay_voters: status.tally.nays.checked_mul(&10000u32.into())?.try_into().unwrap_or_default(), // FIXME but what about underflow when votes are removed?
+									aye_voters: status
+										.tally
+										.ayes
+										.checked_mul(&10000u32.into())?
+										.try_into()
+										.unwrap_or_default(), /* this is OK - voters are only used
+									                       * for DispatchOrigin::Rich, so we lose
+									                       * nothing if these are invalid */
+									nay_voters: status
+										.tally
+										.nays
+										.checked_mul(&10000u32.into())?
+										.try_into()
+										.unwrap_or_default(), /* FIXME but what about underflow when
+									                       * votes are removed? */
 									turnout: status.tally.turnout,
-								}
+								},
 							}),
 						v1::ReferendumInfo::Finished { approved, end } =>
 							ReferendumInfo::Finished { approved, end },
@@ -357,33 +385,41 @@ pub mod v3 {
 				return weight
 			}
 
-			VotingOf::<T>::translate::<v2::Voting::<BalanceOf<T>, T::AccountId, BlockNumberFor<T>, T::MaxVotes>, _>(
-				|_acc, old: v2::Voting::<BalanceOf<T>, T::AccountId, BlockNumberFor<T>, T::MaxVotes>| {
+			VotingOf::<T>::translate::<
+				v2::Voting<BalanceOf<T>, T::AccountId, BlockNumberFor<T>, T::MaxVotes>,
+				_,
+			>(
+				|_acc,
+				 old: v2::Voting<BalanceOf<T>, T::AccountId, BlockNumberFor<T>, T::MaxVotes>| {
 					weight.saturating_accrue(T::DbWeight::get().reads_writes(1, 1));
 					log::info!(target: TARGET, "migrating votingof");
 					Some(match old {
-						v2::Voting::Direct { votes, delegations, prior } =>
-							Voting::Direct {
-								votes,
-								delegations: Delegations {
-									voters: 1,
-									votes: delegations.votes,
-									capital: delegations.capital,
-								},
-								prior
-							} ,
-						v2::Voting::Delegating { balance, target, conviction, delegations, prior } =>
-							Voting::Delegating {
-								balance,
-								target,
-								conviction,
-								delegations: Delegations {
-									voters: 1,
-									votes: delegations.votes,
-									capital: delegations.capital,
-								},
-								prior,
+						v2::Voting::Direct { votes, delegations, prior } => Voting::Direct {
+							votes,
+							delegations: Delegations {
+								voters: 1,
+								votes: delegations.votes,
+								capital: delegations.capital,
 							},
+							prior,
+						},
+						v2::Voting::Delegating {
+							balance,
+							target,
+							conviction,
+							delegations,
+							prior,
+						} => Voting::Delegating {
+							balance,
+							target,
+							conviction,
+							delegations: Delegations {
+								voters: 1,
+								votes: delegations.votes,
+								capital: delegations.capital,
+							},
+							prior,
+						},
 					})
 				},
 			);

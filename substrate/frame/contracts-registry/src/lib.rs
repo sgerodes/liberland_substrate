@@ -22,8 +22,7 @@ type BalanceOf<T, I> =
 pub mod pallet {
 	use super::*;
 
-	use frame_support::pallet_prelude::*;
-	use frame_support::StorageDoubleMap as StorageDoubleMapTrait;
+	use frame_support::{pallet_prelude::*, StorageDoubleMap as StorageDoubleMapTrait};
 	use frame_system::pallet_prelude::OriginFor;
 	use sp_runtime::Saturating;
 

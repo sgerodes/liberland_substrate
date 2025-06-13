@@ -24,11 +24,11 @@ pub mod add_ministry_of_finance_office_pallet {
 			let mut weight = DbWeight::get().reads(1);
 
 			if StorageVersion::get::<MinistryOfFinanceOffice>() == 0 {
-                StorageVersion::new(1).put::<MinistryOfFinanceOffice>();
-                weight = weight.saturating_add(DbWeight::get().reads_writes(1, 1));
-            }
+				StorageVersion::new(1).put::<MinistryOfFinanceOffice>();
+				weight = weight.saturating_add(DbWeight::get().reads_writes(1, 1));
+			}
 
-            weight
+			weight
 		}
 
 		#[cfg(feature = "try-runtime")]

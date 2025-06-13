@@ -318,7 +318,9 @@ where
 	}
 }
 
-#[derive(Copy, Clone, Encode, Decode, Eq, PartialEq, Default, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+#[derive(
+	Copy, Clone, Encode, Decode, Eq, PartialEq, Default, RuntimeDebug, MaxEncodedLen, TypeInfo,
+)]
 pub struct AssetParameters {
 	/// Is eresidency required to receive the asset
 	pub(super) eresidency_required: bool,

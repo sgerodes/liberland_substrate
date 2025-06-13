@@ -15,10 +15,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under the MIT license.
+// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under
+// the MIT license.
 
 // You should have received a copy of the MIT license along with this program. If not, see https://opensource.org/licenses/MIT
-
 
 //! # Phragmén Election Module.
 //!
@@ -112,7 +112,7 @@ use frame_support::{
 	},
 	weights::Weight,
 };
-use liberland_traits::{CitizenshipChecker, LLM, LLInitializer};
+use liberland_traits::{CitizenshipChecker, LLInitializer, LLM};
 use log;
 use scale_info::TypeInfo;
 use sp_npos_elections::{ElectionResult, ExtendedBalance};
@@ -120,8 +120,8 @@ use sp_runtime::{
 	traits::{Saturating, StaticLookup, Zero},
 	DispatchError, Perbill, RuntimeDebug,
 };
-use sp_std::prelude::*;
 use sp_staking::currency_to_vote::CurrencyToVote;
+use sp_std::prelude::*;
 
 #[cfg(any(feature = "try-runtime", test))]
 use sp_runtime::TryRuntimeError;
@@ -1273,21 +1273,20 @@ mod tests {
 	};
 	use frame_system::ensure_signed;
 	use sp_runtime::{
-		Permill,
 		testing::{TestSignature, H256},
 		traits::{BlakeTwo256, IdentityLookup},
-		BuildStorage,
+		BuildStorage, Permill,
 	};
 
 	use frame_support::{construct_runtime, ord_parameter_types, traits::EitherOfDiverse};
-	use frame_system::{EnsureRoot, EnsureSignedBy, EnsureSigned};
+	use frame_system::{EnsureRoot, EnsureSigned, EnsureSignedBy};
 
 	use crate::{Candidates, Config, Error, Renouncing, SeatHolder, Voter};
 	use frame_support::{assert_noop, assert_ok};
 
 	use frame_support::traits::{AsEnsureOriginWithArg, OnInitialize};
-	use substrate_test_utils::assert_eq_uvec;
 	use pallet_asset_conversion::{NativeOrAssetId, NativeOrAssetIdConverter};
+	use substrate_test_utils::assert_eq_uvec;
 
 	type Block = frame_system::mocking::MockBlock<Test>;
 
@@ -1497,7 +1496,7 @@ mod tests {
 		type OnLLMPoliticsUnlock = ();
 		type SenateOrigin = EnsureRoot<u64>;
 		type WeightInfo = ();
-	type MaxCourts = ConstU32<1>;
+		type MaxCourts = ConstU32<1>;
 	}
 
 	pub struct TestChangeMembers;

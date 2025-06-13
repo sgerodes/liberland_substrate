@@ -15,7 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under the MIT license.
+// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under
+// the MIT license.
 
 // You should have received a copy of the MIT license along with this program. If not, see https://opensource.org/licenses/MIT
 
@@ -27,8 +28,8 @@ use liberland_traits::MockCitizenshipChecker;
 
 use frame_support::{
 	construct_runtime, parameter_types,
-	BoundedVec,
 	traits::{AsEnsureOriginWithArg, ConstU32, ConstU64},
+	BoundedVec,
 };
 use sp_core::H256;
 use sp_keystore::{testing::MemoryKeystore, KeystoreExt};
@@ -39,10 +40,12 @@ use sp_runtime::{
 
 pub struct DummyMetadataValidator;
 
-impl<StringLimit> crate::traits::MetadataValidator<u32, u32, StringLimit> for DummyMetadataValidator {
-    fn validate_metadata(_: u32, i: u32, _: &BoundedVec<u8, StringLimit>) -> bool {
+impl<StringLimit> crate::traits::MetadataValidator<u32, u32, StringLimit>
+	for DummyMetadataValidator
+{
+	fn validate_metadata(_: u32, i: u32, _: &BoundedVec<u8, StringLimit>) -> bool {
 		i != 9991999
-    }
+	}
 }
 type Block = frame_system::mocking::MockBlock<Test>;
 

@@ -10,8 +10,11 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 #![cfg(test)]
 
 use crate::{mock::*, Event, NegativeImbalanceOf};
-use frame_support::traits::{Imbalance, OnUnbalanced, SortedMembers};
-use frame_support::{assert_noop, assert_ok, error::BadOrigin};
+use frame_support::{
+	assert_noop, assert_ok,
+	error::BadOrigin,
+	traits::{Imbalance, OnUnbalanced, SortedMembers},
+};
 use sp_runtime::traits::{AccountIdConversion, Hash};
 
 #[test]

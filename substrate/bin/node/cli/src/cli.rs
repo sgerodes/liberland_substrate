@@ -16,7 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 /// The ethereum-compatibility configuration used to run a node.
 #[derive(Clone, Debug, Default, clap::Parser)]
 pub struct EthConfiguration {
@@ -28,6 +27,7 @@ pub struct EthConfiguration {
 	#[arg(long, default_value = "2048")]
 	pub fee_history_limit: u64,
 
+	/// Whether to enable dev signer
 	#[arg(long)]
 	pub enable_dev_signer: bool,
 
@@ -74,6 +74,7 @@ pub struct Cli {
 	#[clap(flatten)]
 	pub storage_monitor: sc_storage_monitor::StorageMonitorParams,
 
+	/// Ethereum-compatibility configuration
 	#[command(flatten)]
 	pub eth: EthConfiguration,
 }

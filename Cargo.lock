@@ -4501,6 +4501,7 @@ dependencies = [
  "pallet-elections-phragmen",
  "pallet-ethereum",
  "pallet-evm",
+ "pallet-evm-accounts",
  "pallet-evm-chain-id",
  "pallet-evm-precompile-modexp",
  "pallet-evm-precompile-sha3fips",
@@ -6739,6 +6740,17 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-std",
+]
+
+[[package]]
+name = "pallet-evm-accounts"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
 ]
 
 [[package]]

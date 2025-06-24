@@ -1765,6 +1765,10 @@ impl pallet_hotfix_sufficients::Config for Runtime {
 	type WeightInfo = pallet_hotfix_sufficients::weights::SubstrateWeight<Self>;
 }
 
+impl pallet_evm_accounts::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+}
+
 // Sora Bridge
 parameter_types! {
 	pub const BridgeMaxMessagePayloadSize: u32 = 256;
@@ -1943,6 +1947,7 @@ construct_runtime!(
 		DynamicFee: pallet_dynamic_fee = 71,
 		BaseFee: pallet_base_fee = 72,
 		HotfixSufficients: pallet_hotfix_sufficients = 73,
+		EVMAccounts: pallet_evm_accounts = 74,
 
 		// Sora Bridge:
 		LeafProvider: leaf_provider = 80,

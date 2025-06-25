@@ -1,14 +1,19 @@
 // We make sure this pallet uses `no_std` for compiling to Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
 
+use frame_support::pallet_prelude::*;
+use frame_support::PalletId;
+use frame_system::pallet_prelude::*;
+use pallet_evm::{AddressMapping, EnsureAddressTruncated};
+use sp_core::H160;
+use sp_runtime::traits::AccountIdConversion;
+use sp_std::marker::PhantomData;
+
 pub use pallet::*;
 
 #[frame_support::pallet(dev_mode)]
 pub mod pallet {
 	use super::*;
-	use frame_support::pallet_prelude::*;
-	use frame_system::pallet_prelude::*;
-	use sp_core::H160;
 
 	#[pallet::pallet]
 	pub struct Pallet<T>(_);
@@ -62,5 +67,15 @@ pub mod pallet {
 
 			Ok(())
 		}
+	}
+}
+
+pub struct EvmAccountMapping<T>(PhantomData<T>);
+
+impl<T: Config> AddressMapping<T::AccountId> for EvmAccountMapping<T> {
+	fn into_account_id(address: sp_core::H160) -> T::AccountId {
+		EvmToAccountId::<T>::get(&address)
+			// TODO: Replace with unique address mapping
+			.unwrap_or(PalletId(*b"evmaccou").into_account_truncating())
 	}
 }

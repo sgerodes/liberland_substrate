@@ -61,6 +61,7 @@ use frame_system::{
 pub use node_primitives::{AccountId, Moment, Signature};
 use pallet_asset_conversion::{NativeOrAssetId, NativeOrAssetIdConverter};
 use pallet_election_provider_multi_phase::SolutionAccuracyOf;
+use pallet_evm_accounts::EvmAccountMapping;
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use pallet_nfts::PalletFeatures;
 use pallet_session::historical as pallet_session_historical;
@@ -1698,7 +1699,7 @@ impl pallet_evm::Config for Runtime {
 	type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
 	type CallOrigin = pallet_evm::EnsureAddressTruncated;
 	type WithdrawOrigin = pallet_evm::EnsureAddressTruncated;
-	type AddressMapping = pallet_evm::HashedAddressMapping<BlakeTwo256>;
+	type AddressMapping = EvmAccountMapping<Self>;
 	type Currency = Balances;
 	type RuntimeEvent = RuntimeEvent;
 	type PrecompilesType = FrontierPrecompiles<Self>;

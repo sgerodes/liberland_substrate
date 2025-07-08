@@ -8,6 +8,7 @@ use pallet_evm::AddressMapping;
 use sp_core::H160;
 use sp_runtime::traits::AccountIdConversion;
 use sp_std::marker::PhantomData;
+use sp_std::prelude::*;
 
 pub use pallet::*;
 
@@ -44,6 +45,27 @@ pub mod pallet {
 	#[pallet::storage]
 	pub type EvmToAccountId<T: Config> =
 		StorageMap<_, Twox64Concat, H160, T::AccountId, OptionQuery>;
+
+	#[pallet::genesis_config]
+	pub struct GenesisConfig<T: Config> {
+		pub linked_accounts: Vec<(T::AccountId, H160)>,
+	}
+
+	impl<T: Config> Default for GenesisConfig<T> {
+		fn default() -> Self {
+			Self { linked_accounts: Vec::new() }
+		}
+	}
+
+	#[pallet::genesis_build]
+	impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
+		fn build(&self) {
+			for (account, evm_account) in &self.linked_accounts {
+				AccountIdToEvm::<T>::insert(account, evm_account);
+				EvmToAccountId::<T>::insert(evm_account, account);
+			}
+		}
+	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {

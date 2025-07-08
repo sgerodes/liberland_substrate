@@ -4,7 +4,7 @@
 use frame_support::pallet_prelude::*;
 use frame_support::PalletId;
 use frame_system::pallet_prelude::*;
-use pallet_evm::{AddressMapping, EnsureAddressTruncated};
+use pallet_evm::AddressMapping;
 use sp_core::H160;
 use sp_runtime::traits::AccountIdConversion;
 use sp_std::marker::PhantomData;

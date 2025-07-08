@@ -96,7 +96,7 @@ pub struct EvmAccountMapping<T>(PhantomData<T>);
 
 impl<T: Config> AddressMapping<T::AccountId> for EvmAccountMapping<T> {
 	fn into_account_id(address: sp_core::H160) -> T::AccountId {
-		EvmToAccountId::<T>::get(&address)
+		EvmToAccountId::<T>::get(address)
 			// TODO: Replace with unique address mapping
 			.unwrap_or(PalletId(*b"evmaccou").into_account_truncating())
 	}

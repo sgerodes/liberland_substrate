@@ -4,9 +4,11 @@
 use frame_support::pallet_prelude::*;
 use frame_support::PalletId;
 use frame_system::pallet_prelude::*;
-use pallet_evm::AddressMapping;
+use frame_system::RawOrigin;
+use pallet_evm::{AddressMapping, EnsureAddressOrigin};
 use sp_core::H160;
 use sp_runtime::traits::AccountIdConversion;
+use sp_runtime::AccountId32;
 use sp_std::marker::PhantomData;
 use sp_std::prelude::*;
 
@@ -92,6 +94,7 @@ pub mod pallet {
 	}
 }
 
+/// Mapping from EVM address to Substrate address
 pub struct EvmAccountMapping<T>(PhantomData<T>);
 
 impl<T: Config> AddressMapping<T::AccountId> for EvmAccountMapping<T> {
@@ -99,5 +102,22 @@ impl<T: Config> AddressMapping<T::AccountId> for EvmAccountMapping<T> {
 		EvmToAccountId::<T>::get(address)
 			// TODO: Replace with unique address mapping
 			.unwrap_or(PalletId(*b"evmaccou").into_account_truncating())
+	}
+}
+
+impl<OuterOrigin, T: Config> EnsureAddressOrigin<OuterOrigin> for EvmAccountMapping<T>
+where
+	OuterOrigin: Into<Result<RawOrigin<AccountId32>, OuterOrigin>> + From<RawOrigin<AccountId32>>,
+{
+	type Success = AccountId32;
+
+	fn try_address_origin(
+		_address: &H160,
+		origin: OuterOrigin,
+	) -> Result<Self::Success, OuterOrigin> {
+		origin.into().and_then(|o| match o {
+			RawOrigin::Signed(who) => Ok(who),
+			r => Err(OuterOrigin::from(r)),
+		})
 	}
 }

@@ -1697,8 +1697,8 @@ impl pallet_evm::Config for Runtime {
 	type GasWeightMapping = pallet_evm::FixedGasWeightMapping<Self>;
 	type WeightPerGas = WeightPerGas;
 	type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
-	type CallOrigin = pallet_evm::EnsureAddressTruncated;
-	type WithdrawOrigin = pallet_evm::EnsureAddressTruncated;
+	type CallOrigin = pallet_evm_accounts::EvmAccountMapping<Self>;
+	type WithdrawOrigin = pallet_evm_accounts::EvmAccountMapping<Self>;
 	type AddressMapping = EvmAccountMapping<Self>;
 	type Currency = Balances;
 	type RuntimeEvent = RuntimeEvent;

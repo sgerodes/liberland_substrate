@@ -1,5 +1,5 @@
 use super::*;
-use frame_support::{pallet_prelude::*, traits::OnRuntimeUpgrade};
+use frame_support::traits::OnRuntimeUpgrade;
 
 #[cfg(feature = "try-runtime")]
 use sp_std::vec::Vec;
@@ -9,7 +9,7 @@ use sp_runtime::TryRuntimeError;
 
 type DbWeight = <Runtime as frame_system::Config>::DbWeight;
 
-pub mod add_ministry_of_finance_office_pallet {
+pub mod initialize_evm_chainid {
 	use super::*;
 
 	pub struct Migration<T>(sp_std::marker::PhantomData<T>);
@@ -21,14 +21,19 @@ pub mod add_ministry_of_finance_office_pallet {
 		}
 
 		fn on_runtime_upgrade() -> Weight {
-			let mut weight = DbWeight::get().reads(1);
+			let weight = DbWeight::get().writes(1);
 
-			if StorageVersion::get::<MinistryOfFinanceOffice>() == 0 {
-                StorageVersion::new(1).put::<MinistryOfFinanceOffice>();
-                weight = weight.saturating_add(DbWeight::get().reads_writes(1, 1));
-            }
+			// TODO: Update once official IDs are obtained
 
-            weight
+			// EVM ChainId - mainnet
+			#[cfg(not(feature = "testnet-runtime"))]
+			pallet_evm_chain_id::ChainId::<Runtime>::put(1234u64);
+
+			// EVM ChainId - testnet
+			#[cfg(feature = "testnet-runtime")]
+			pallet_evm_chain_id::ChainId::<Runtime>::put(5678u64);
+
+			weight
 		}
 
 		#[cfg(feature = "try-runtime")]

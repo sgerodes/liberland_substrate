@@ -6718,7 +6718,6 @@ dependencies = [
 [[package]]
 name = "pallet-evm"
 version = "6.0.0-dev"
-source = "git+https://github.com/polkadot-evm/frontier?branch=polkadot-v1.1.0#7544791796a93e85716241b72ba68b7c7231376f"
 dependencies = [
  "environmental",
  "evm",
@@ -6732,6 +6731,9 @@ dependencies = [
  "hex-literal 0.4.1",
  "impl-trait-for-tuples",
  "log",
+ "pallet-balances",
+ "pallet-evm-precompile-simple",
+ "pallet-timestamp",
  "parity-scale-codec",
  "rlp",
  "scale-info",

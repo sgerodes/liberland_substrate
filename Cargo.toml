@@ -21,6 +21,7 @@ members = [
 	"substrate/frame/llm",
 	"substrate/frame/liberland-legislation",
 	"substrate/frame/contracts-registry",
+	"substrate/frame/evm",
 	"liberland-extension/runtime",
 	"liberland-extension/ink",
 ]
@@ -109,3 +110,6 @@ pallet-elections-phragmen = { path = "substrate/frame/elections-phragmen" }
 pallet-staking = { path = "substrate/frame/staking" }
 pallet-nfts = { path = "substrate/frame/nfts" }
 pallet-assets = { path = "substrate/frame/assets" }
+
+[patch."https://github.com/polkadot-evm/frontier"]
+pallet-evm = { path = "substrate/frame/evm" }

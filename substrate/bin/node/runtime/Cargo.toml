@@ -108,7 +108,6 @@ pallet-office = { path = "../../../frame/office", default-features = false }
 pallet-custom-account = { path = "../../../frame/custom-account", default-features = false }
 pallet-contracts-registry = { path = "../../../frame/contracts-registry", default-features = false }
 liberland-extension-runtime = { path = "../../../../liberland-extension/runtime", default-features = false }
-pallet-evm-accounts = { path = "../../../frame/evm-accounts", default-features = false }
 
 # Frontier
 fp-evm = { default-features = false, features = ["serde"], branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
@@ -229,7 +228,6 @@ std = [
 	"pallet-dynamic-fee/std",
 	"pallet-ethereum/std",
 	"pallet-evm/std",
-	"pallet-evm-accounts/std",
 	"pallet-evm-chain-id/std",
 	"pallet-evm-precompile-modexp/std",
 	"pallet-evm-precompile-sha3fips/std",
@@ -321,7 +319,6 @@ try-runtime = [
 	"pallet-democracy/try-runtime",
 	"pallet-election-provider-multi-phase/try-runtime",
 	"pallet-elections-phragmen/try-runtime",
-	"pallet-evm-accounts/try-runtime",
 	"pallet-grandpa/try-runtime",
 	"pallet-identity/try-runtime",
 	"pallet-im-online/try-runtime",

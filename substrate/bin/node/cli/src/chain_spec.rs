@@ -38,7 +38,7 @@ use kitchensink_runtime::{
 	IdentityOfficePalletId, AssetRegistryOfficeConfig,
 	LandRegistryOfficePalletId, AssetRegistryOfficePalletId,
 	MetaverseLandRegistryOfficeConfig, MetaverseLandRegistryOfficePalletId,
-	SenateConfig, MinistryOfFinanceOfficeConfig, EVMChainIdConfig, EVMConfig, EVMAccountsConfig,
+	SenateConfig, MinistryOfFinanceOfficeConfig, EVMChainIdConfig, EVMConfig,
 	impls::{RegistryCallFilter, IdentityCallFilter, NftsCallFilter},
 };
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
@@ -497,31 +497,7 @@ pub fn testnet_genesis(
 		evm_chain_id: EVMChainIdConfig { chain_id: 4321, ..Default::default() },
 		base_fee: Default::default(),
 		dynamic_fee: Default::default(),
-        evm_accounts: EVMAccountsConfig {
-                linked_accounts: vec![
-                        (
-                                // Web3-Test1
-                                AccountId::from_ss58check("5GjYePC6HKJGGnEzEZzSvimy6uctuMat4Kr2tjACtKyY9nhT")
-                                        .unwrap(),
-                                H160::from_str("0xa8af9765850689Dfc51c13BeCCd03d9Cf63Faa5c")
-                                        .expect("internal H160 is valid; qed"),
-                        ),
-                        (
-                                // Web3-Test2
-                                AccountId::from_ss58check("5EqhBxsfDdbddFxcdRPhDBx8V3N2QyQspV5FNfQeT8nFQtj8")
-                                        .unwrap(),
-                                H160::from_str("0xF00bA42A11AE924b5c1a456F21C66479B61475aA")
-                                        .expect("internal H160 is valid; qed"),
-                        ),
-                        (
-                                // Web3-Test3
-                                AccountId::from_ss58check("5CkYuVwK6bRjjaqam76VkPG4xXb1TsmbSQzWrMwaFnQ1nu6z")
-                                        .unwrap(),
-                                H160::from_str("0x999999994B613A989DD5f3dDe833D2ccb5a7b243")
-                                        .expect("internal H160 is valid; qed"),
-                        ),
-                ],
-        },	}
+        }
 }
 
 fn development_config_genesis() -> RuntimeGenesisConfig {

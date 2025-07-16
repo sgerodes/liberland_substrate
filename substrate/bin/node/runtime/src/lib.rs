@@ -61,7 +61,6 @@ use frame_system::{
 pub use node_primitives::{AccountId, Moment, Signature};
 use pallet_asset_conversion::{NativeOrAssetId, NativeOrAssetIdConverter};
 use pallet_election_provider_multi_phase::SolutionAccuracyOf;
-use pallet_evm_accounts::EvmAccountMapping;
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use pallet_nfts::PalletFeatures;
 use pallet_session::historical as pallet_session_historical;
@@ -1697,9 +1696,9 @@ impl pallet_evm::Config for Runtime {
 	type GasWeightMapping = pallet_evm::FixedGasWeightMapping<Self>;
 	type WeightPerGas = WeightPerGas;
 	type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
-	type CallOrigin = pallet_evm_accounts::EvmAccountMapping<Self>;
-	type WithdrawOrigin = pallet_evm_accounts::EvmAccountMapping<Self>;
-	type AddressMapping = EvmAccountMapping<Self>;
+	type CallOrigin = pallet_evm::EnsureAddressTruncated;
+	type WithdrawOrigin = pallet_evm::EnsureAddressTruncated;
+	type AddressMapping = pallet_evm::HashedAddressMapping<BlakeTwo256>;
 	type Currency = Balances;
 	type RuntimeEvent = RuntimeEvent;
 	type PrecompilesType = FrontierPrecompiles<Self>;
@@ -1764,10 +1763,6 @@ impl pallet_base_fee::Config for Runtime {
 impl pallet_hotfix_sufficients::Config for Runtime {
 	type AddressMapping = pallet_evm::HashedAddressMapping<BlakeTwo256>;
 	type WeightInfo = pallet_hotfix_sufficients::weights::SubstrateWeight<Self>;
-}
-
-impl pallet_evm_accounts::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
 }
 
 // Sora Bridge
@@ -1948,7 +1943,6 @@ construct_runtime!(
 		DynamicFee: pallet_dynamic_fee = 71,
 		BaseFee: pallet_base_fee = 72,
 		HotfixSufficients: pallet_hotfix_sufficients = 73,
-		EVMAccounts: pallet_evm_accounts = 74,
 
 		// Sora Bridge:
 		LeafProvider: leaf_provider = 80,

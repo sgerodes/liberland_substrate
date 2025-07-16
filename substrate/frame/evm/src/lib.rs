@@ -108,6 +108,17 @@ pub use self::{
 	weights::WeightInfo,
 };
 
+/// Decimals conversion between Substrate and EVM
+pub const EVM_DECIMAL_ADAPTOR: u128 = 10_000_000;
+
+pub fn evm_decimals_expand(origin: U256) -> U256 {
+	origin.saturating_mul(U256::from(EVM_DECIMAL_ADAPTOR))
+}
+
+pub fn evm_decimals_shrink(origin: U256) -> U256 {
+	origin.checked_div(U256::from(EVM_DECIMAL_ADAPTOR)).unwrap_or(U256::from(EVM_DECIMAL_ADAPTOR))
+}
+
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
@@ -874,7 +885,7 @@ impl<T: Config> Pallet<T> {
 		(
 			Account {
 				nonce: U256::from(UniqueSaturatedInto::<u128>::unique_saturated_into(nonce)),
-				balance: U256::from(UniqueSaturatedInto::<u128>::unique_saturated_into(balance)),
+				balance: evm_decimals_shrink(U256::from(UniqueSaturatedInto::<u128>::unique_saturated_into(balance))),
 			},
 			T::DbWeight::get().reads(2),
 		)

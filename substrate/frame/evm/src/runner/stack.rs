@@ -50,7 +50,7 @@ use fp_evm::{
 use crate::{
 	runner::Runner as RunnerT, AccountCodes, AccountCodesMetadata, AccountStorages, AddressMapping,
 	BalanceOf, BlockHashMapping, Config, Error, Event, FeeCalculator, OnChargeEVMTransaction,
-	OnCreate, Pallet, RunnerError,
+	OnCreate, Pallet, RunnerError, evm_decimals_shrink
 };
 
 #[cfg(feature = "forbid-evm-reentrancy")]
@@ -906,11 +906,12 @@ where
 	fn transfer(&mut self, transfer: Transfer) -> Result<(), ExitError> {
 		let source = T::AddressMapping::into_account_id(transfer.source);
 		let target = T::AddressMapping::into_account_id(transfer.target);
+		let value = evm_decimals_shrink(transfer.value);
+
 		T::Currency::transfer(
 			&source,
 			&target,
-			transfer
-				.value
+			value
 				.try_into()
 				.map_err(|_| ExitError::OutOfFund)?,
 			ExistenceRequirement::AllowDeath,

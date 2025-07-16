@@ -20,10 +20,11 @@
 
 //! Service implementation. Specialized wrapper over substrate service.
 
+use crate::eth::{
+	db_config_dir, new_frontier_partial, spawn_frontier_tasks, FrontierPartialComponents,
+};
 use crate::{Cli, EthConfiguration};
-use crate::eth::{spawn_frontier_tasks, db_config_dir, new_frontier_partial, FrontierPartialComponents};
 use codec::Encode;
-use fc_consensus::FrontierBlockImport;
 use frame_benchmarking_cli::SUBSTRATE_REFERENCE_HARDWARE;
 use frame_system_rpc_runtime_api::AccountNonceApi;
 use futures::prelude::*;
@@ -31,7 +32,7 @@ use kitchensink_runtime::{RuntimeApi, TransactionConverter};
 use node_executor::ExecutorDispatch;
 use node_primitives::Block;
 use sc_client_api::{Backend, BlockBackend};
-use sc_consensus_babe::{self, SlotProportion, BabeWorkerHandle};
+use sc_consensus_babe::{self, BabeWorkerHandle, SlotProportion};
 use sc_executor::NativeElseWasmExecutor;
 use sc_network::{event::Event, NetworkEventStream, NetworkService};
 use sc_network_sync::{warp::WarpSyncParams, SyncingService};
@@ -137,7 +138,7 @@ pub fn create_extrinsic(
 /// Creates a new partial node.
 pub fn new_partial(
 	config: &Configuration,
-    eth: &EthConfiguration,
+	eth: &EthConfiguration,
 ) -> Result<
 	sc_service::PartialComponents<
 		FullClient,
@@ -147,7 +148,7 @@ pub fn new_partial(
 		sc_transaction_pool::FullPool<Block, FullClient>,
 		(
 			(
-				sc_consensus_babe::BabeBlockImport<Block, FullClient, FrontierBlockImport<Block, FullGrandpaBlockImport, FullClient>>,
+				sc_consensus_babe::BabeBlockImport<Block, FullClient, FullGrandpaBlockImport>,
 				grandpa::LinkHalf<Block, FullClient, FullSelectChain>,
 				sc_consensus_babe::BabeLink<Block>,
 			),
@@ -202,12 +203,9 @@ pub fn new_partial(
 	)?;
 	let justification_import = grandpa_block_import.clone();
 
-    let frontier_block_import =
-        FrontierBlockImport::new(grandpa_block_import.clone(), client.clone());
-
 	let (block_import, babe_link) = sc_consensus_babe::block_import(
 		sc_consensus_babe::configuration(&*client)?,
-		frontier_block_import,
+		grandpa_block_import,
 		client.clone(),
 	)?;
 
@@ -228,7 +226,8 @@ pub fn new_partial(
 					*timestamp,
 					slot_duration,
 				);
-				let dynamic_fee = fp_dynamic_fee::InherentDataProvider(U256::from(target_gas_price));
+				let dynamic_fee =
+					fp_dynamic_fee::InherentDataProvider(U256::from(target_gas_price));
 
 				Ok((slot, timestamp, dynamic_fee))
 			},
@@ -271,10 +270,10 @@ pub struct NewFullBase {
 /// Creates a full service from the configuration.
 pub fn new_full_base(
 	config: Configuration,
-    eth: EthConfiguration,
+	eth: EthConfiguration,
 	disable_hardware_benchmarks: bool,
 	with_startup_data: impl FnOnce(
-		&sc_consensus_babe::BabeBlockImport<Block, FullClient, FrontierBlockImport<Block, FullGrandpaBlockImport, FullClient>>,
+		&sc_consensus_babe::BabeBlockImport<Block, FullClient, FullGrandpaBlockImport>,
 		&sc_consensus_babe::BabeLink<Block>,
 	),
 ) -> Result<NewFullBase, ServiceError> {
@@ -336,26 +335,20 @@ pub fn new_full_base(
 	let enable_offchain_worker = config.offchain_worker.enabled;
 
 	// Frontier
-    let frontier_backend = fc_db::kv::Backend::open(
-        Arc::clone(&client),
-        &config.database,
-        &db_config_dir(&config),
-    )?;
+	let frontier_backend =
+		fc_db::kv::Backend::open(Arc::clone(&client), &config.database, &db_config_dir(&config))?;
 
-	let FrontierPartialComponents {
-		filter_pool,
-		fee_history_cache,
-		fee_history_cache_limit,
-	} = new_frontier_partial(&eth)?;
+	let FrontierPartialComponents { filter_pool, fee_history_cache, fee_history_cache_limit } =
+		new_frontier_partial(&eth)?;
 
-    let overrides = fc_storage::overrides_handle(client.clone());
-    let block_data_cache = Arc::new(fc_rpc::EthBlockDataCacheTask::new(
-        task_manager.spawn_handle(),
-        overrides.clone(),
-        eth.eth_log_block_cache,
-        eth.eth_statuses_cache,
-        prometheus_registry.clone(),
-    ));
+	let overrides = fc_storage::overrides_handle(client.clone());
+	let block_data_cache = Arc::new(fc_rpc::EthBlockDataCacheTask::new(
+		task_manager.spawn_handle(),
+		overrides.clone(),
+		eth.eth_log_block_cache,
+		eth.eth_statuses_cache,
+		prometheus_registry.clone(),
+	));
 
 	// Sinks for pubsub notifications.
 	// Everytime a new subscription is created, a new mpsc channel is added to the sink pool.
@@ -374,32 +367,32 @@ pub fn new_full_base(
 	let rpc_pool = transaction_pool.clone();
 	let rpc_filter_pool = filter_pool.clone();
 	let rpc_fee_history_cache = fee_history_cache.clone();
-    let rpc_sync_service = sync_service.clone();
-    let rpc_frontier_backend = frontier_backend.clone();
-    let rpc_overrides = overrides.clone();
-    let rpc_pubsub_notification_sinks = pubsub_notification_sinks.clone();
-    let rpc_select_chain = select_chain.clone();
-    let rpc_shared_voter_state = shared_voter_state.clone();
+	let rpc_sync_service = sync_service.clone();
+	let rpc_frontier_backend = frontier_backend.clone();
+	let rpc_overrides = overrides.clone();
+	let rpc_pubsub_notification_sinks = pubsub_notification_sinks.clone();
+	let rpc_select_chain = select_chain.clone();
+	let rpc_shared_voter_state = shared_voter_state.clone();
 	let is_authority = role.is_authority();
-    let enable_dev_signer = eth.enable_dev_signer;
-    let max_past_logs = eth.max_past_logs;
-    let execute_gas_limit_multiplier = eth.execute_gas_limit_multiplier;
-    let slot_duration = import_setup.2.config().slot_duration();
+	let enable_dev_signer = eth.enable_dev_signer;
+	let max_past_logs = eth.max_past_logs;
+	let execute_gas_limit_multiplier = eth.execute_gas_limit_multiplier;
+	let slot_duration = import_setup.2.config().slot_duration();
 	let target_gas_price = eth.target_gas_price;
 	let pending_create_inherent_data_providers = move |_, ()| async move {
 		let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
 		let slot =
-		sp_consensus_babe::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
-			*timestamp,
-			slot_duration,
-		);
+			sp_consensus_babe::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
+				*timestamp,
+				slot_duration,
+			);
 		let dynamic_fee = fp_dynamic_fee::InherentDataProvider(U256::from(target_gas_price));
 
 		Ok((slot, timestamp, dynamic_fee))
 	};
 
-    let subscription_task_executor = Arc::new(task_manager.spawn_handle());
+	let subscription_task_executor = Arc::new(task_manager.spawn_handle());
 	let justification_stream = import_setup.1.justification_stream();
 	let shared_authority_set = import_setup.1.shared_authority_set().clone();
 	let finality_proof_provider = grandpa::FinalityProofProvider::new_for_service(
@@ -651,9 +644,7 @@ pub fn new_full_base(
 				network_provider: network.clone(),
 				is_validator: role.is_authority(),
 				enable_http_requests: true,
-				custom_extensions: move |_| {
-					vec![]
-				},
+				custom_extensions: move |_| vec![],
 			})
 			.run(client.clone(), task_manager.spawn_handle())
 			.boxed(),
@@ -689,8 +680,8 @@ pub fn new_full(config: Configuration, cli: Cli) -> Result<TaskManager, ServiceE
 
 #[cfg(test)]
 mod tests {
-	use crate::service::{new_full_base, NewFullBase};
 	use crate::cli::EthConfiguration;
+	use crate::service::{new_full_base, NewFullBase};
 	use codec::Encode;
 	use kitchensink_runtime::{
 		constants::{currency::CENTS, time::SLOT_DURATION},
@@ -817,7 +808,7 @@ mod tests {
 						sc_consensus_babe::authorship::claim_slot(slot.into(), &epoch, &keystore)
 							.map(|(digest, _)| digest)
 					{
-						break (babe_pre_digest, epoch_descriptor)
+						break (babe_pre_digest, epoch_descriptor);
 					}
 
 					slot += 1;

@@ -109,7 +109,7 @@ pub use self::{
 };
 
 /// Decimals conversion between Substrate and EVM
-pub const EVM_DECIMAL_ADAPTOR: u128 = 10_000_000;
+pub const EVM_DECIMAL_ADAPTOR: u128 = 1_000_000;
 
 pub fn evm_decimals_expand(origin: U256) -> U256 {
 	origin.saturating_mul(U256::from(EVM_DECIMAL_ADAPTOR))
@@ -885,7 +885,7 @@ impl<T: Config> Pallet<T> {
 		(
 			Account {
 				nonce: U256::from(UniqueSaturatedInto::<u128>::unique_saturated_into(nonce)),
-				balance: evm_decimals_shrink(U256::from(UniqueSaturatedInto::<u128>::unique_saturated_into(balance))),
+				balance: evm_decimals_expand(U256::from(UniqueSaturatedInto::<u128>::unique_saturated_into(balance))),
 			},
 			T::DbWeight::get().reads(2),
 		)

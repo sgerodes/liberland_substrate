@@ -233,7 +233,7 @@ where
 				})?;
 
 		// Deduct fee from the `source` account. Returns `None` if `total_fee` is Zero.
-		let fee = T::OnChargeTransaction::withdraw_fee(&source, total_fee)
+		let fee = T::OnChargeTransaction::withdraw_fee(&source, evm_decimals_shrink(total_fee))
 			.map_err(|e| RunnerError { error: e, weight })?;
 
 		// Execute the EVM call.
@@ -260,7 +260,7 @@ where
 			)),
 			_ => used_gas.into(),
 		};
-		let actual_fee = effective_gas.saturating_mul(total_fee_per_gas);
+		let actual_fee = evm_decimals_shrink(effective_gas.saturating_mul(total_fee_per_gas));
 		let actual_base_fee = effective_gas.saturating_mul(base_fee);
 
 		log::debug!(

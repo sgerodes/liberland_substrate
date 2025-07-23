@@ -35,7 +35,7 @@ use kitchensink_runtime::{
 	IdentityOfficePalletId, AssetRegistryOfficeConfig,
 	LandRegistryOfficePalletId, AssetRegistryOfficePalletId,
 	MetaverseLandRegistryOfficeConfig, MetaverseLandRegistryOfficePalletId,
-	SenateConfig, MinistryOfFinanceOfficeConfig, EVMChainIdConfig,
+	SenateConfig, MinistryOfFinanceOfficeConfig, EVMChainIdConfig, EVMConfig,
 	impls::{RegistryCallFilter, IdentityCallFilter, NftsCallFilter},
 };
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
@@ -45,11 +45,13 @@ use sc_telemetry::TelemetryEndpoints;
 use serde::{Deserialize, Serialize};
 use sp_authority_discovery::AuthorityId as AuthorityDiscoveryId;
 use sp_consensus_babe::AuthorityId as BabeId;
-use sp_core::{crypto::{Ss58Codec, UncheckedInto}, sr25519, Pair, Public};
+use sp_core::{crypto::{Ss58Codec, UncheckedInto}, H160, U256, sr25519, Pair, Public};
 use sp_runtime::{
 	traits::{IdentifyAccount, Verify, AccountIdConversion},
 	Perbill,
 };
+use std::collections::BTreeMap;
+use std::str::FromStr;
 
 pub use kitchensink_runtime::RuntimeGenesisConfig;
 pub use node_primitives::{AccountId, Balance, Signature};
@@ -467,7 +469,26 @@ pub fn testnet_genesis(
 		sora_bridge_app: Default::default(),
 		// Frontier
 		ethereum: Default::default(),
-		evm: Default::default(),
+		evm: EVMConfig {
+			accounts: {
+				let mut map = BTreeMap::new();
+				map.insert(
+					// Address used by pallet-evm benchmarks
+					H160::from_str("100000000000000000000000000000000000000f")
+						.expect("internal H160 is valid; qed"),
+					fp_evm::GenesisAccount {
+						nonce: Default::default(),
+						balance: U256::from_str("0xffffffffffffffffffffffffffffffff")
+							.expect("internal U256 is valid; qed"),
+						storage: Default::default(),
+						code: Default::default(),
+					}
+				);
+
+				map
+			},
+			..Default::default()
+		},
 		evm_chain_id: EVMChainIdConfig { chain_id: 12864, ..Default::default() },
 		base_fee: Default::default(),
 		dynamic_fee: Default::default(),

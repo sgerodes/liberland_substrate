@@ -110,7 +110,7 @@ fc-api = { branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/fr
 fc-db = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
 fc-consensus = { branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
 fc-mapping-sync = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
-fc-rpc = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+fc-rpc = { path = "../../../client/rpc", default-features = false }
 fc-rpc-core = { branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
 fc-storage = { branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
 

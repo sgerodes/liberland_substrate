@@ -656,6 +656,16 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 			],
 		},
 	);
+	// Used by benchmarking tests
+	accounts.insert(
+		H160::from_str("100000000000000000000000000000000000000f").unwrap(),
+		GenesisAccount {
+			nonce: Default::default(),
+			balance: U256::max_value(),
+			storage: Default::default(),
+			code: vec![],
+		},
+	);
 	accounts.insert(
 		H160::default(), // root
 		GenesisAccount {

@@ -10,6 +10,7 @@ resolver = "2"
 members = [
 	"substrate/bin/node/cli",
 	"substrate/bin/node/runtime",
+	"substrate/client/rpc",
 	"substrate/frame/democracy",
 	"substrate/frame/elections-phragmen",
 	"substrate/frame/identity",
@@ -112,4 +113,5 @@ pallet-nfts = { path = "substrate/frame/nfts" }
 pallet-assets = { path = "substrate/frame/assets" }
 
 [patch."https://github.com/polkadot-evm/frontier"]
+fc-rpc = { path = "substrate/client/rpc" }
 pallet-evm = { path = "substrate/frame/evm" }

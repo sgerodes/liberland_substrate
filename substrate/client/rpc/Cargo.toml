@@ -11,66 +11,66 @@ repository = { workspace = true }
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-ethereum = { workspace = true, features = ["with-codec"] }
-ethereum-types = { workspace = true }
-evm = { workspace = true }
-futures = { workspace = true }
-hex = { workspace = true }
-jsonrpsee = { workspace = true, features = ["server", "macros"] }
-libsecp256k1 = { workspace = true }
-log = { workspace = true }
+ethereum = { version = "0.14.0", default-features = false, features = ["with-codec"] }
+ethereum-types = { version = "0.14.1", default-features = false }
+evm = { git = "https://github.com/rust-blockchain/evm", rev = "b7b82c7e1fc57b7449d6dfa6826600de37cc1e65", default-features = false }
+futures = "0.3.28"
+hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
+jsonrpsee = { version = "0.16.3", features = ["server", "macros"] }
+libsecp256k1 = { version = "0.7.1", default-features = false }
+log = { version = "0.4.20", default-features = false }
 prometheus = { version = "0.13.1", default-features = false }
 rand = "0.8"
-rlp = { workspace = true }
-scale-codec = { package = "parity-scale-codec", workspace = true }
+rlp = { version = "0.5.2", default-features = false }
+scale-codec = { package = "parity-scale-codec", version = "3.6.4", default-features = false, features = ["derive"] }
 schnellru = "0.2.1"
-serde = { workspace = true }
-thiserror = { workspace = true }
-tokio = { workspace = true, features = ["sync"] }
+# serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
+thiserror = "1.0"
+tokio = { version = "1.32.0", features = ["sync"] }
 
 # Substrate
-prometheus-endpoint = { workspace = true }
-sc-client-api = { workspace = true }
-sc-consensus-aura = { workspace = true }
-sc-network = { workspace = true }
-sc-network-common = { workspace = true }
-sc-network-sync = { workspace = true }
-sc-rpc = { workspace = true }
-sc-service = { workspace = true }
-sc-transaction-pool = { workspace = true }
-sc-transaction-pool-api = { workspace = true }
-sc-utils = { workspace = true }
-sp-api = { workspace = true, features = ["default"] }
-sp-block-builder = { workspace = true, features = ["default"] }
-sp-blockchain = { workspace = true }
-sp-consensus = { workspace = true }
-sp-consensus-aura = { workspace = true, features = ["default"] }
-sp-core = { workspace = true, features = ["default"] }
-sp-inherents = { workspace = true, features = ["default"] }
-sp-io = { workspace = true, features = ["default"] }
-sp-runtime = { workspace = true, features = ["default"] }
-sp-state-machine = { workspace = true, features = ["default"] }
-sp-storage = { workspace = true, features = ["default"] }
-sp-timestamp = { workspace = true, features = ["default"] }
+prometheus-endpoint = { package = "substrate-prometheus-endpoint", version = "0.10.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0" }
+sc-client-api = { version = "4.0.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0" }
+sc-consensus-aura = { version = "0.10.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0" }
+sc-network = { version = "0.10.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0" }
+sc-network-common = { version = "0.10.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0" }
+sc-network-sync = { version = "0.10.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0" }
+sc-rpc = { version = "4.0.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0" }
+sc-service = { version = "0.10.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0", default-features = false }
+sc-transaction-pool = { version = "4.0.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0" }
+sc-transaction-pool-api = { version = "4.0.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0" }
+sc-utils = { version = "4.0.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0" }
+sp-api = { version = "4.0.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0", default-features = false, features = ["default"] }
+sp-block-builder = { version = "4.0.0-dev", git = "https://github.com/paritytech/polkadot-sdk",	branch = "release-polkadot-v1.1.0", default-features = false, features = ["default"] }
+sp-blockchain = { version = "4.0.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0" }
+sp-consensus = { version = "0.10.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0" }
+sp-consensus-aura = { version = "0.10.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0", default-features = false, features = ["default"] }
+sp-core = { version = "21.0.0", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0", default-features = false, features = ["default"] }
+sp-inherents = { version = "4.0.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0", default-features = false, features = ["default"] }
+sp-io = { version = "23.0.0", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0", default-features = false, features = ["default"] }
+sp-runtime = { version = "24.0.0", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0", default-features = false, features = ["default"] }
+sp-state-machine = { version = "0.28.0", git = "https://github.com/paritytech/polkadot-sdk", branch	= "release-polkadot-v1.1.0", default-features = false, features = ["default"] }
+sp-storage = { version = "13.0.0", git = "https://github.com/paritytech/polkadot-sdk", branch =	"release-polkadot-v1.1.0", default-features = false, features = ["default"] }
+sp-timestamp = { version = "4.0.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0", default-features = false, features = ["default"] }
 # Frontier
-fc-api = { workspace = true }
-fc-mapping-sync = { workspace = true }
-fc-rpc-core = { workspace = true }
-fc-storage = { workspace = true }
-fp-evm = { workspace = true, features = ["default"] }
-fp-rpc = { workspace = true, features = ["default"] }
-fp-storage = { workspace = true, features = ["default"] }
-pallet-evm = { workspace = true, features = ["default"] }
+fc-api = { branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+fc-mapping-sync = { branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier", default-features = false }
+fc-rpc-core = { branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+fc-storage = { branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier", default-features = false }
+fp-evm = { branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier", default-features = false, features = ["default"] }
+fp-rpc = { branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier", default-features = false, features = ["default"] }
+fp-storage = { branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier", default-features = false, features = ["default"] }
+pallet-evm = { path = "../../frame/evm", default-features = true, features = ["default"] }
 
 [dev-dependencies]
 tempfile = "3.8.0"
 # Substrate
-sc-block-builder = { workspace = true }
-sc-client-db = { workspace = true, features = ["rocksdb"] }
-sp-consensus = { workspace = true }
-substrate-test-runtime-client = { workspace = true }
+sp-block-builder = { version = "4.0.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0", default-features = false }
+sc-client-db = { version = "0.10.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0", default-features = false, features = ["rocksdb"] }
+sp-consensus = { version = "0.10.0-dev", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0" }
+substrate-test-runtime-client = { version = "2.0.0", git = "https://github.com/paritytech/polkadot-sdk", branch = "release-polkadot-v1.1.0" }
 # Frontier
-fc-db = { workspace = true }
+fc-db = { branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier",	default-features = false }
 
 [features]
 default = ["rocksdb"]

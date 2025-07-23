@@ -2559,12 +2559,12 @@ dependencies = [
 [[package]]
 name = "fc-rpc"
 version = "2.0.0-dev"
-source = "git+https://github.com/polkadot-evm/frontier?branch=polkadot-v1.1.0#7544791796a93e85716241b72ba68b7c7231376f"
 dependencies = [
  "ethereum",
  "ethereum-types",
  "evm",
  "fc-api",
+ "fc-db",
  "fc-mapping-sync",
  "fc-rpc-core",
  "fc-storage",
@@ -2582,6 +2582,7 @@ dependencies = [
  "rand 0.8.5",
  "rlp",
  "sc-client-api",
+ "sc-client-db",
  "sc-consensus-aura",
  "sc-network",
  "sc-network-common",
@@ -2592,7 +2593,6 @@ dependencies = [
  "sc-transaction-pool-api",
  "sc-utils",
  "schnellru",
- "serde",
  "sp-api",
  "sp-block-builder",
  "sp-blockchain",
@@ -2606,6 +2606,8 @@ dependencies = [
  "sp-storage",
  "sp-timestamp",
  "substrate-prometheus-endpoint",
+ "substrate-test-runtime-client",
+ "tempfile",
  "thiserror",
  "tokio",
 ]

@@ -850,8 +850,7 @@ fn author_should_get_tip() {
 		);
 		result.expect("EVM can be called");
 		let after_tip = EVM::account_basic(&author).0.balance;
-		// Rounding down below 1_000_000 Wei
-		assert_eq!(after_tip, before_tip);
+		assert_eq!(after_tip, (before_tip + evm_decimals_expand(21000.into())));
 	});
 }
 

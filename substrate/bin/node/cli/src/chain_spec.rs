@@ -468,8 +468,7 @@ pub fn testnet_genesis(
 		// Frontier
 		ethereum: Default::default(),
 		evm: Default::default(),
-		// TODO: Set proper chain_id before deployment
-		evm_chain_id: EVMChainIdConfig { chain_id: 4321, ..Default::default() },
+		evm_chain_id: EVMChainIdConfig { chain_id: 12864, ..Default::default() },
 		base_fee: Default::default(),
 		dynamic_fee: Default::default(),
         }

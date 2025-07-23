@@ -23,15 +23,13 @@ pub mod initialize_evm_chainid {
 		fn on_runtime_upgrade() -> Weight {
 			let weight = DbWeight::get().writes(1);
 
-			// TODO: Update once official IDs are obtained
-
 			// EVM ChainId - mainnet
 			#[cfg(not(feature = "testnet-runtime"))]
-			pallet_evm_chain_id::ChainId::<Runtime>::put(1234u64);
+			pallet_evm_chain_id::ChainId::<Runtime>::put(12864u64);
 
 			// EVM ChainId - testnet
 			#[cfg(feature = "testnet-runtime")]
-			pallet_evm_chain_id::ChainId::<Runtime>::put(5678u64);
+			pallet_evm_chain_id::ChainId::<Runtime>::put(12865u64);
 
 			weight
 		}

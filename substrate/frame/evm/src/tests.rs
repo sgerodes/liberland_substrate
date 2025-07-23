@@ -754,7 +754,7 @@ fn ed_0_refund_patch_works() {
 			evm_addr,
 			H160::from_str("1000000000000000000000000000000000000001").unwrap(),
 			Vec::new(),
-			U256::from(1_000_000_000),
+			evm_decimals_expand(1_000_000_000.into()),
 			21776,
 			U256::from(1_000_000_000),
 			None,

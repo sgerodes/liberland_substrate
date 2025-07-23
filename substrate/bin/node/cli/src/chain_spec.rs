@@ -22,9 +22,6 @@
 
 // You should have received a copy of the MIT license along with this program. If not, see https://opensource.org/licenses/MIT
 
-use std::collections::BTreeMap;
-use std::str::FromStr;
-use sp_core::{H160, U256};
 use grandpa_primitives::AuthorityId as GrandpaId;
 use kitchensink_runtime::{
 	constants::currency::*, constants::llm::*, wasm_binary_unwrap,
@@ -38,7 +35,7 @@ use kitchensink_runtime::{
 	IdentityOfficePalletId, AssetRegistryOfficeConfig,
 	LandRegistryOfficePalletId, AssetRegistryOfficePalletId,
 	MetaverseLandRegistryOfficeConfig, MetaverseLandRegistryOfficePalletId,
-	SenateConfig, MinistryOfFinanceOfficeConfig, EVMChainIdConfig, EVMConfig,
+	SenateConfig, MinistryOfFinanceOfficeConfig, EVMChainIdConfig,
 	impls::{RegistryCallFilter, IdentityCallFilter, NftsCallFilter},
 };
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;

@@ -915,7 +915,7 @@ fn refunds_should_work() {
 			H160::default(),
 			H160::from_str("1000000000000000000000000000000000000001").unwrap(),
 			Vec::new(),
-			U256::from(1),
+			evm_decimals_expand(1.into()),
 			1000000,
 			U256::from(2_000_000_000),
 			None,
@@ -925,7 +925,7 @@ fn refunds_should_work() {
 		let (base_fee, _) = <Test as Config>::FeeCalculator::min_gas_price();
 		let total_cost = (U256::from(21_000) * base_fee) + U256::from(1);
 		let after_call = EVM::account_basic(&H160::default()).0.balance;
-		assert_eq!(after_call, before_call - total_cost + 1);
+		assert_eq!(after_call, before_call - evm_decimals_expand(total_cost));
 	});
 }
 

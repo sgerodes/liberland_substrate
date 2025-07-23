@@ -827,7 +827,7 @@ fn reducible_balance() {
 		Balances::set_lock(lock_id, &account_id, to_lock, WithdrawReasons::RESERVE);
 		// Reducible is, as currently configured in `account_basic`, (balance - lock - existential).
 		let reducible_balance = EVM::account_basic(&evm_addr).0.balance;
-		assert_eq!(reducible_balance, (genesis_balance - to_lock - existential));
+		assert_eq!(reducible_balance, (genesis_balance - evm_decimals_expand(to_lock.into()) - existential));
 	});
 }
 
@@ -850,7 +850,8 @@ fn author_should_get_tip() {
 		);
 		result.expect("EVM can be called");
 		let after_tip = EVM::account_basic(&author).0.balance;
-		assert_eq!(after_tip, (before_tip + 21000));
+		// Rounding down below 1_000_000 Wei
+		assert_eq!(after_tip, before_tip);
 	});
 }
 
@@ -925,7 +926,7 @@ fn refunds_should_work() {
 		let (base_fee, _) = <Test as Config>::FeeCalculator::min_gas_price();
 		let total_cost = (U256::from(21_000) * base_fee) + U256::from(1);
 		let after_call = EVM::account_basic(&H160::default()).0.balance;
-		assert_eq!(after_call, before_call - total_cost);
+		assert_eq!(after_call, before_call - total_cost + 1);
 	});
 }
 
@@ -959,10 +960,12 @@ fn refunds_and_priority_should_work() {
 		let total_cost = (used_gas * base_fee) + actual_tip + U256::from(1);
 		let after_call = EVM::account_basic(&H160::default()).0.balance;
 		// The tip is deducted but never refunded to the caller.
-		assert_eq!(after_call, before_call - total_cost);
+		// Accounting for rounding
+		assert_eq!(after_call, before_call - evm_decimals_expand(total_cost) + 1_000_000);
 
 		let after_tip = EVM::account_basic(&author).0.balance;
-		assert_eq!(after_tip, (before_tip + actual_tip));
+		// Decimals converter divison
+		assert_eq!(after_tip, (before_tip + evm_decimals_expand(actual_tip)));
 	});
 }
 

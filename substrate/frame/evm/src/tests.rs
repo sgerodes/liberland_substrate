@@ -1272,3 +1272,49 @@ fn metadata_empty_dont_code_gets_cached() {
 		assert!(<AccountCodesMetadata<Test>>::get(address).is_none());
 	});
 }
+
+#[test]
+fn evm_decimals_shrink_should_work() {
+	new_test_ext().execute_with(|| {
+		let value = U256::from(10_000_000);
+		let shrunk = evm_decimals_shrink(value);
+		assert_eq!(shrunk, U256::from(10));
+
+		let value = U256::from(0);
+		let shrunk = evm_decimals_shrink(value);
+		assert_eq!(shrunk, U256::from(0));
+
+		let value = U256::from(123456);
+		let shrunk = evm_decimals_shrink(value);
+		assert_eq!(shrunk, U256::from(0));
+
+		let value = U256::from(1_000_000);
+		let expanded = evm_decimals_shrink(value);
+		assert_eq!(expanded, U256::from(1));
+
+		let value = U256::from(1234567);
+		let shrunk = evm_decimals_shrink(value);
+		assert_eq!(shrunk, U256::from(1));
+	});
+}
+
+#[test]
+fn evm_decimals_expand_should_work() {
+	new_test_ext().execute_with(|| {
+		let value = U256::from(10);
+		let expanded = evm_decimals_expand(value);
+		assert_eq!(expanded, U256::from(10_000_000));
+
+		let value = U256::from(0);
+		let expanded = evm_decimals_expand(value);
+		assert_eq!(expanded, U256::from(0));
+
+		let value = U256::from(1);
+		let expanded = evm_decimals_expand(value);
+		assert_eq!(expanded, U256::from(1_000_000));
+
+		let value = U256::from(12345);
+		let expanded = evm_decimals_expand(value);
+		assert_eq!(expanded, U256::from(12_345_000_000u64));
+	});
+}

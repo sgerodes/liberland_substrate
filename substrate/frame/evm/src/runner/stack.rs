@@ -233,7 +233,7 @@ where
 				})?;
 
 		// Deduct fee from the `source` account. Returns `None` if `total_fee` is Zero.
-		let fee = T::OnChargeTransaction::withdraw_fee(&source, total_fee)
+		let fee = T::OnChargeTransaction::withdraw_fee(&source, evm_decimals_shrink(total_fee))
 			.map_err(|e| RunnerError { error: e, weight })?;
 
 		// Execute the EVM call.

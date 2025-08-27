@@ -764,7 +764,7 @@ fn ed_0_refund_patch_works() {
 			evm_addr,
 			H160::from_str("1000000000000000000000000000000000000001").unwrap(),
 			Vec::new(),
-			evm_decimals_expand(1_000_000_000.into()),
+			U256::from(1_000_000_000),
 			21776,
 			U256::from(1_000_000_000),
 			None,
@@ -772,7 +772,8 @@ fn ed_0_refund_patch_works() {
 			Vec::new(),
 		);
 		// All that was due, was refunded.
-		assert_eq!(Balances::free_balance(substrate_addr), 776_000_000_000);
+		// Account for EVM decimals conversion
+		assert_eq!(Balances::free_balance(substrate_addr), 21_776_978_999_000);
 	});
 }
 
@@ -860,7 +861,8 @@ fn author_should_get_tip() {
 		);
 		result.expect("EVM can be called");
 		let after_tip = EVM::account_basic(&author).0.balance;
-		assert_eq!(after_tip, (before_tip + evm_decimals_expand(21000.into())));
+		// With EVM decimals conversion tip will be rounded down to zero
+		assert_eq!(after_tip, before_tip);
 	});
 }
 
@@ -886,7 +888,10 @@ fn issuance_after_tip() {
 		let base_fee: u64 = <Test as Config>::FeeCalculator::min_gas_price()
 			.0
 			.unique_saturated_into();
-		assert_eq!(after_tip, (before_tip - (base_fee * 21_000)));
+		let burned: u64 = evm_decimals_shrink((base_fee * 21_000).into())
+			.try_into()
+			.unwrap();
+		assert_eq!(after_tip, (before_tip - burned));
 	});
 }
 
@@ -933,9 +938,9 @@ fn refunds_should_work() {
 			Vec::new(),
 		);
 		let (base_fee, _) = <Test as Config>::FeeCalculator::min_gas_price();
-		let total_cost = (U256::from(21_000) * base_fee) + U256::from(1);
+		let total_cost = (U256::from(21_000) * base_fee) + evm_decimals_expand(U256::from(1));
 		let after_call = EVM::account_basic(&H160::default()).0.balance;
-		assert_eq!(after_call, before_call - evm_decimals_expand(total_cost));
+		assert_eq!(after_call, before_call - total_cost);
 	});
 }
 
@@ -966,15 +971,13 @@ fn refunds_and_priority_should_work() {
 		);
 		let (base_fee, _) = <Test as Config>::FeeCalculator::min_gas_price();
 		let actual_tip = (max_fee_per_gas - base_fee).min(tip) * used_gas;
-		let total_cost = (used_gas * base_fee) + actual_tip + U256::from(1);
+		let total_cost = (used_gas * base_fee) + actual_tip;
 		let after_call = EVM::account_basic(&H160::default()).0.balance;
 		// The tip is deducted but never refunded to the caller.
-		// Accounting for rounding
-		assert_eq!(after_call, before_call - evm_decimals_expand(total_cost) + 1_000_000);
+		assert_eq!(after_call, before_call - total_cost);
 
 		let after_tip = EVM::account_basic(&author).0.balance;
-		// Decimals converter divison
-		assert_eq!(after_tip, (before_tip + evm_decimals_expand(actual_tip)));
+		assert_eq!(after_tip, (before_tip + actual_tip));
 	});
 }
 

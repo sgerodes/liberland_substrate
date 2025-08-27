@@ -301,9 +301,9 @@ where
 		let actual_priority_fee = T::OnChargeTransaction::correct_and_deposit_fee(
 			&source,
 			// Actual fee after evm execution, including tip.
-			actual_fee,
+			evm_decimals_shrink(actual_fee),
 			// Base fee.
-			actual_base_fee,
+			evm_decimals_shrink(actual_base_fee),
 			// Fee initially withdrawn.
 			fee,
 		);

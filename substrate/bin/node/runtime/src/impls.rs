@@ -18,28 +18,27 @@
 //! Some configurable implementations as associated type for the substrate runtime.
 
 use super::*;
-use codec::{Encode, Decode};
+use bridge_types::{LiberlandAssetId, H256};
+use codec::{Decode, Encode};
 use frame_support::{
+	dispatch::{DispatchErrorWithPostInfo, DispatchInfo, GetDispatchInfo, PostDispatchInfo},
+	pallet_prelude::{ConstU32, Get, MaxEncodedLen, PhantomData},
+	traits::{Contains, Currency, EnsureOrigin, InstanceFilter, OnUnbalanced, PrivilegeCmp},
 	BoundedVec,
-	pallet_prelude::{ConstU32, PhantomData, Get, MaxEncodedLen},
-	traits::{
-		Currency, OnUnbalanced, InstanceFilter,
-		Contains, PrivilegeCmp, EnsureOrigin,
-	},
 };
-use sp_runtime::{RuntimeDebug, AccountId32, DispatchError, traits::{TrailingZeroInput, Morph}};
-use sp_std::{vec, cmp::{max, min, Ordering}};
 use scale_info::TypeInfo;
-use sp_runtime::traits::Dispatchable;
-use frame_support::dispatch::{DispatchInfo, PostDispatchInfo, DispatchErrorWithPostInfo, GetDispatchInfo};
-use bridge_types::H256;
-use sp_runtime::traits::Convert;
-use bridge_types::LiberlandAssetId;
 use serde::{Deserialize, Serialize};
+use sp_runtime::{
+	traits::{Convert, Dispatchable, Morph, TrailingZeroInput},
+	AccountId32, DispatchError, RuntimeDebug,
+};
+use sp_std::{
+	cmp::{max, min, Ordering},
+	vec,
+};
 
 use crate::{
-	AccountId, Authorship, Balances, NegativeImbalance, RuntimeCall,
-	Democracy, RuntimeOrigin,
+	AccountId, Authorship, Balances, Democracy, NegativeImbalance, RuntimeCall, RuntimeOrigin,
 };
 
 pub struct Author;
@@ -80,7 +79,7 @@ where
 	Deserialize,
 )]
 pub enum IdentityCallFilter {
-	Manager, // set_fee, set_account_id, set_fields, provide_judgement
+	Manager,   // set_fee, set_account_id, set_fields, provide_judgement
 	Judgement, // provide_judgement
 }
 
@@ -93,22 +92,22 @@ impl Default for IdentityCallFilter {
 impl InstanceFilter<RuntimeCall> for IdentityCallFilter {
 	fn filter(&self, c: &RuntimeCall) -> bool {
 		match self {
-			IdentityCallFilter::Manager =>
-				matches!(c,
-					RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool { .. }) |
+			IdentityCallFilter::Manager => matches!(
+				c,
+				RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool { .. }) |
 					RuntimeCall::Balances(pallet_balances::Call::transfer { .. }) |
 					RuntimeCall::Identity(pallet_identity::Call::set_fee { .. }) |
 					RuntimeCall::Identity(pallet_identity::Call::set_fields { .. }) |
 					RuntimeCall::Identity(pallet_identity::Call::set_account_id { .. }) |
 					RuntimeCall::Identity(pallet_identity::Call::provide_judgement { .. })
-				),
-			IdentityCallFilter::Judgement =>
-				matches!(c,
-					RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool { .. }) |
+			),
+			IdentityCallFilter::Judgement => matches!(
+				c,
+				RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool { .. }) |
 					RuntimeCall::Balances(pallet_balances::Call::transfer { .. }) |
 					RuntimeCall::Identity(pallet_identity::Call::provide_judgement { .. }) |
 					RuntimeCall::System(frame_system::Call::remark { .. }) // for benchmarking
-				)
+			),
 		}
 	}
 	fn is_superset(&self, o: &Self) -> bool {
@@ -134,7 +133,7 @@ impl InstanceFilter<RuntimeCall> for IdentityCallFilter {
 	Deserialize,
 )]
 pub enum RegistryCallFilter {
-	All, // registry_entity, set_registered_entity, unregister
+	All,          // registry_entity, set_registered_entity, unregister
 	RegisterOnly, // register_entity
 }
 
@@ -147,14 +146,17 @@ impl Default for RegistryCallFilter {
 impl InstanceFilter<RuntimeCall> for RegistryCallFilter {
 	fn filter(&self, c: &RuntimeCall) -> bool {
 		match self {
-			RegistryCallFilter::All =>
-				matches!(c,
-					RuntimeCall::CompanyRegistry(pallet_registry::Call::register_entity { .. }) |
-					RuntimeCall::CompanyRegistry(pallet_registry::Call::set_registered_entity { .. }) |
-					RuntimeCall::CompanyRegistry(pallet_registry::Call::unregister { .. })
-				),
-			RegistryCallFilter::RegisterOnly =>
-				matches!(c, RuntimeCall::CompanyRegistry(pallet_registry::Call::register_entity { .. }))
+			RegistryCallFilter::All => matches!(
+				c,
+				RuntimeCall::CompanyRegistry(pallet_registry::Call::register_entity { .. }) |
+					RuntimeCall::CompanyRegistry(
+						pallet_registry::Call::set_registered_entity { .. }
+					) | RuntimeCall::CompanyRegistry(pallet_registry::Call::unregister { .. })
+			),
+			RegistryCallFilter::RegisterOnly => matches!(
+				c,
+				RuntimeCall::CompanyRegistry(pallet_registry::Call::register_entity { .. })
+			),
 		}
 	}
 	fn is_superset(&self, o: &Self) -> bool {
@@ -180,7 +182,7 @@ impl InstanceFilter<RuntimeCall> for RegistryCallFilter {
 	Deserialize,
 )]
 pub enum MinistryOfFinanceCallFilter {
-	FullRights, // all balances, assets and llm transfers, + batch + llm.remark
+	FullRights,             // all balances, assets and llm transfers, + batch + llm.remark
 	PooledMeritsRightsOnly, // llm.send_llm_to_politipool only, + batch + llm.remark
 }
 
@@ -193,17 +195,17 @@ impl Default for MinistryOfFinanceCallFilter {
 impl MinistryOfFinanceCallFilter {
 	fn tier_filter(&self, c: &RuntimeCall) -> bool {
 		match self {
-			Self::FullRights => matches!(c,
+			Self::FullRights => matches!(
+				c,
 				RuntimeCall::LLM(pallet_llm::Call::send_llm { .. }) |
-				RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool { .. }) |
-				RuntimeCall::Assets(pallet_assets::Call::transfer { .. }) |
-				RuntimeCall::Assets(pallet_assets::Call::transfer_keep_alive { .. }) |
-				RuntimeCall::Balances(pallet_balances::Call::transfer { .. }) |
-				RuntimeCall::Balances(pallet_balances::Call::transfer_keep_alive { .. })
+					RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool { .. }) |
+					RuntimeCall::Assets(pallet_assets::Call::transfer { .. }) |
+					RuntimeCall::Assets(pallet_assets::Call::transfer_keep_alive { .. }) |
+					RuntimeCall::Balances(pallet_balances::Call::transfer { .. }) |
+					RuntimeCall::Balances(pallet_balances::Call::transfer_keep_alive { .. })
 			),
-			Self::PooledMeritsRightsOnly => matches!(c,
-				RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool { .. })
-			),
+			Self::PooledMeritsRightsOnly =>
+				matches!(c, RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool { .. })),
 		}
 	}
 }
@@ -211,8 +213,10 @@ impl MinistryOfFinanceCallFilter {
 impl InstanceFilter<RuntimeCall> for MinistryOfFinanceCallFilter {
 	fn filter(&self, c: &RuntimeCall) -> bool {
 		match c {
-			RuntimeCall::Utility(pallet_utility::Call::batch { calls }) => calls.iter().all(|call| self.filter(call)),
-			RuntimeCall::Utility(pallet_utility::Call::batch_all { calls }) => calls.iter().all(|call| self.filter(call)),
+			RuntimeCall::Utility(pallet_utility::Call::batch { calls }) =>
+				calls.iter().all(|call| self.filter(call)),
+			RuntimeCall::Utility(pallet_utility::Call::batch_all { calls }) =>
+				calls.iter().all(|call| self.filter(call)),
 			RuntimeCall::LLM(pallet_llm::Call::remark { .. }) => true,
 			_ => self.tier_filter(c),
 		}
@@ -252,38 +256,44 @@ impl Default for NftsCallFilter {
 }
 
 impl InstanceFilter<RuntimeCall> for NftsCallFilter {
-	fn filter(&self, c: &RuntimeCall) -> bool {	
-		let matches_manage_items = matches!(c, 
+	fn filter(&self, c: &RuntimeCall) -> bool {
+		let matches_manage_items = matches!(
+			c,
 			RuntimeCall::Nfts(pallet_nfts::Call::mint { .. }) |
-			RuntimeCall::Nfts(pallet_nfts::Call::force_mint { .. }) |
-			RuntimeCall::Nfts(pallet_nfts::Call::burn { .. }) |
-			RuntimeCall::Nfts(pallet_nfts::Call::redeposit { .. }) |
-			RuntimeCall::Nfts(pallet_nfts::Call::approve_transfer { .. }) |
-			RuntimeCall::Nfts(pallet_nfts::Call::cancel_approval { .. }) |
-			RuntimeCall::Nfts(pallet_nfts::Call::clear_all_transfer_approvals { .. }) |
-			RuntimeCall::Nfts(pallet_nfts::Call::set_attribute { .. }) |
-			RuntimeCall::Nfts(pallet_nfts::Call::clear_attribute { .. }) |
-			RuntimeCall::Nfts(pallet_nfts::Call::approve_item_attributes { .. }) |
-			RuntimeCall::Nfts(pallet_nfts::Call::cancel_item_attributes_approval { .. }) |
-			RuntimeCall::Nfts(pallet_nfts::Call::set_metadata { .. }) |
-			RuntimeCall::Nfts(pallet_nfts::Call::clear_metadata { .. })
+				RuntimeCall::Nfts(pallet_nfts::Call::force_mint { .. }) |
+				RuntimeCall::Nfts(pallet_nfts::Call::burn { .. }) |
+				RuntimeCall::Nfts(pallet_nfts::Call::redeposit { .. }) |
+				RuntimeCall::Nfts(pallet_nfts::Call::approve_transfer { .. }) |
+				RuntimeCall::Nfts(pallet_nfts::Call::cancel_approval { .. }) |
+				RuntimeCall::Nfts(pallet_nfts::Call::clear_all_transfer_approvals { .. }) |
+				RuntimeCall::Nfts(pallet_nfts::Call::set_attribute { .. }) |
+				RuntimeCall::Nfts(pallet_nfts::Call::clear_attribute { .. }) |
+				RuntimeCall::Nfts(pallet_nfts::Call::approve_item_attributes { .. }) |
+				RuntimeCall::Nfts(pallet_nfts::Call::cancel_item_attributes_approval { .. }) |
+				RuntimeCall::Nfts(pallet_nfts::Call::set_metadata { .. }) |
+				RuntimeCall::Nfts(pallet_nfts::Call::clear_metadata { .. })
 		);
 		match self {
-			NftsCallFilter::Manager => matches_manage_items || matches!(c,
-					RuntimeCall::Nfts(pallet_nfts::Call::destroy { .. }) |
-					RuntimeCall::Nfts(pallet_nfts::Call::lock_item_transfer { .. }) |
-					RuntimeCall::Nfts(pallet_nfts::Call::unlock_item_transfer { .. }) |
-					RuntimeCall::Nfts(pallet_nfts::Call::lock_collection { .. }) |
-					RuntimeCall::Nfts(pallet_nfts::Call::transfer_ownership { .. }) |
-					RuntimeCall::Nfts(pallet_nfts::Call::set_team { .. }) |
-					RuntimeCall::Nfts(pallet_nfts::Call::lock_item_properties { .. }) |
-					RuntimeCall::Nfts(pallet_nfts::Call::set_collection_metadata { .. }) |
-					RuntimeCall::Nfts(pallet_nfts::Call::clear_collection_metadata { .. }) |
-					RuntimeCall::Nfts(pallet_nfts::Call::set_accept_ownership { .. }) |
-					RuntimeCall::Nfts(pallet_nfts::Call::set_collection_max_supply { .. }) |
-					RuntimeCall::Nfts(pallet_nfts::Call::update_mint_settings { .. }) |
-					RuntimeCall::Nfts(pallet_nfts::Call::set_citizenship_required { .. })
-				),
+			NftsCallFilter::Manager =>
+				matches_manage_items ||
+					matches!(
+						c,
+						RuntimeCall::Nfts(pallet_nfts::Call::destroy { .. }) |
+							RuntimeCall::Nfts(pallet_nfts::Call::lock_item_transfer { .. }) |
+							RuntimeCall::Nfts(pallet_nfts::Call::unlock_item_transfer { .. }) |
+							RuntimeCall::Nfts(pallet_nfts::Call::lock_collection { .. }) |
+							RuntimeCall::Nfts(pallet_nfts::Call::transfer_ownership { .. }) |
+							RuntimeCall::Nfts(pallet_nfts::Call::set_team { .. }) |
+							RuntimeCall::Nfts(pallet_nfts::Call::lock_item_properties { .. }) |
+							RuntimeCall::Nfts(pallet_nfts::Call::set_collection_metadata { .. }) |
+							RuntimeCall::Nfts(
+								pallet_nfts::Call::clear_collection_metadata { .. }
+							) | RuntimeCall::Nfts(pallet_nfts::Call::set_accept_ownership { .. }) |
+							RuntimeCall::Nfts(
+								pallet_nfts::Call::set_collection_max_supply { .. }
+							) | RuntimeCall::Nfts(pallet_nfts::Call::update_mint_settings { .. }) |
+							RuntimeCall::Nfts(pallet_nfts::Call::set_citizenship_required { .. })
+					),
 			NftsCallFilter::ManageItems => matches_manage_items,
 		}
 	}
@@ -298,38 +308,64 @@ impl InstanceFilter<RuntimeCall> for NftsCallFilter {
 }
 
 #[derive(
-	Clone, Eq, PartialEq, Encode, Decode, RuntimeDebug, MaxEncodedLen, scale_info::TypeInfo, Serialize, Deserialize,
+	Clone,
+	Eq,
+	PartialEq,
+	Encode,
+	Decode,
+	RuntimeDebug,
+	MaxEncodedLen,
+	scale_info::TypeInfo,
+	Serialize,
+	Deserialize,
 )]
 pub struct SenateAccountCallFilter;
 
 impl Contains<RuntimeCall> for SenateAccountCallFilter {
 	fn contains(c: &RuntimeCall) -> bool {
 		match c {
-			RuntimeCall::Utility(pallet_utility::Call::batch { calls }) => calls.iter().all(|inner_call| Self::contains(inner_call)),
-			RuntimeCall::Utility(pallet_utility::Call::batch_all { calls }) => calls.iter().all(|inner_call| Self::contains(inner_call)),
-			_ => matches!(c,
+			RuntimeCall::Utility(pallet_utility::Call::batch { calls }) =>
+				calls.iter().all(|inner_call| Self::contains(inner_call)),
+			RuntimeCall::Utility(pallet_utility::Call::batch_all { calls }) =>
+				calls.iter().all(|inner_call| Self::contains(inner_call)),
+			_ => matches!(
+				c,
 				RuntimeCall::LLM(pallet_llm::Call::remark { .. }) |
-				RuntimeCall::LLM(pallet_llm::Call::send_llm { .. }) |
-				RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool { .. }) |
-				RuntimeCall::Assets(pallet_assets::Call::transfer { .. }) |
-				RuntimeCall::Assets(pallet_assets::Call::transfer_keep_alive { .. }) |
-				RuntimeCall::Balances(pallet_balances::Call::transfer { .. }) |
-				RuntimeCall::Balances(pallet_balances::Call::transfer_keep_alive { .. })
-			)
+					RuntimeCall::LLM(pallet_llm::Call::send_llm { .. }) |
+					RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool { .. }) |
+					RuntimeCall::Assets(pallet_assets::Call::transfer { .. }) |
+					RuntimeCall::Assets(pallet_assets::Call::transfer_keep_alive { .. }) |
+					RuntimeCall::Balances(pallet_balances::Call::transfer { .. }) |
+					RuntimeCall::Balances(pallet_balances::Call::transfer_keep_alive { .. })
+			),
 		}
 	}
 }
 
 #[derive(
-	Clone, Eq, PartialEq, Encode, Decode, RuntimeDebug, MaxEncodedLen, scale_info::TypeInfo, Serialize, Deserialize,
+	Clone,
+	Eq,
+	PartialEq,
+	Encode,
+	Decode,
+	RuntimeDebug,
+	MaxEncodedLen,
+	scale_info::TypeInfo,
+	Serialize,
+	Deserialize,
 )]
 pub struct CouncilAccountCallFilter;
 
 impl CouncilAccountCallFilter {
 	fn ensure_schedule(c: &RuntimeCall) -> Result<(&RuntimeCall, &BlockNumber), ()> {
-		if let RuntimeCall::Scheduler(pallet_scheduler::Call::schedule { when, call, ..}) = c {
+		if let RuntimeCall::Scheduler(pallet_scheduler::Call::schedule { when, call, .. }) = c {
 			Ok((call, when))
-		} else if let RuntimeCall::Scheduler(pallet_scheduler::Call::schedule_named { when, call, ..}) = c {
+		} else if let RuntimeCall::Scheduler(pallet_scheduler::Call::schedule_named {
+			when,
+			call,
+			..
+		}) = c
+		{
 			Ok((call, when))
 		} else {
 			Err(())
@@ -355,19 +391,20 @@ impl CouncilAccountCallFilter {
 			RuntimeCall::Assets(pallet_assets::Call::transfer_keep_alive { .. }) => Ok(()),
 			RuntimeCall::Balances(pallet_balances::Call::transfer { .. }) => Ok(()),
 			RuntimeCall::Balances(pallet_balances::Call::transfer_keep_alive { .. }) => Ok(()),
-			_ => Err(())
+			_ => Err(()),
 		}
 	}
 
 	fn ensure_valid_council_call(c: &RuntimeCall) -> Result<(), ()> {
 		let (scheduled_call, when) = Self::ensure_schedule(c)?;
 		if when - System::block_number() <= 4 * DAYS {
-			return Err(());
+			return Err(())
 		}
 
 		let batched_calls = Self::ensure_batched(scheduled_call)?;
 
-		batched_calls.iter()
+		batched_calls
+			.iter()
 			.map(Self::ensure_transfer_or_remark)
 			.all(|v| v.is_ok())
 			.then_some(())
@@ -381,14 +418,12 @@ impl Contains<RuntimeCall> for CouncilAccountCallFilter {
 	}
 }
 
-pub struct ContainsMember<T, I>(
-    PhantomData<(T, I)>,
-);
+pub struct ContainsMember<T, I>(PhantomData<(T, I)>);
 
 impl<T, I> Contains<T::AccountId> for ContainsMember<T, I>
 where
 	T: frame_system::Config + pallet_collective::Config<I>,
-	I: 'static
+	I: 'static,
 {
 	fn contains(a: &T::AccountId) -> bool {
 		pallet_collective::Pallet::<T, I>::members().contains(a)
@@ -397,20 +432,18 @@ where
 
 use pallet_democracy::Voting;
 pub struct OnLLMPoliticsUnlock;
-impl liberland_traits::OnLLMPoliticsUnlock<AccountId32> for OnLLMPoliticsUnlock
-{
+impl liberland_traits::OnLLMPoliticsUnlock<AccountId32> for OnLLMPoliticsUnlock {
 	fn on_llm_politics_unlock(account_id: &AccountId32) -> Result<(), DispatchError> {
 		let origin = RuntimeOrigin::signed(account_id.clone());
 
 		match Democracy::voting_of(account_id.clone()) {
-			Voting::Direct { votes, .. } => {
+			Voting::Direct { votes, .. } =>
 				for (index, _) in votes {
 					Democracy::remove_vote(origin.clone(), index)?;
-				}
-			},
+				},
 			Voting::Delegating { .. } => {
 				Democracy::undelegate(origin.clone()).map_err(|e| e.error)?;
-			}
+			},
 		};
 
 		Ok(())
@@ -419,10 +452,8 @@ impl liberland_traits::OnLLMPoliticsUnlock<AccountId32> for OnLLMPoliticsUnlock
 
 pub struct EnsureCmp<L>(sp_std::marker::PhantomData<L>);
 impl<L: EnsureOrigin<RuntimeOrigin>> PrivilegeCmp<OriginCaller> for EnsureCmp<L> {
-  fn cmp_privilege(left: &OriginCaller, _: &OriginCaller) -> Option<Ordering> {
-		if L::try_origin(
-			<OriginCaller as Into<RuntimeOrigin>>::into(left.clone())
-		).is_ok() {
+	fn cmp_privilege(left: &OriginCaller, _: &OriginCaller) -> Option<Ordering> {
+		if L::try_origin(<OriginCaller as Into<RuntimeOrigin>>::into(left.clone())).is_ok() {
 			Some(Ordering::Equal)
 		} else {
 			None
@@ -449,14 +480,7 @@ pub struct Coords {
 }
 
 #[derive(
-	Clone,
-	Encode,
-	Decode,
-	RuntimeDebug,
-	MaxEncodedLen,
-	scale_info::TypeInfo,
-	Serialize,
-	Deserialize,
+	Clone, Encode, Decode, RuntimeDebug, MaxEncodedLen, scale_info::TypeInfo, Serialize, Deserialize,
 )]
 pub struct Metadata<MaxCoords: Get<u32>, MaxString: Get<u32>> {
 	demarcation: BoundedVec<Coords, MaxCoords>,
@@ -481,22 +505,17 @@ impl<CoordsBounds: Get<(Coords, Coords)>, StringLimit>
 		fn intersection(p1: Coords, q1: Coords, p2: Coords, q2: Coords) -> bool {
 			fn on_segment(p: Coords, q: Coords, r: Coords) -> bool {
 				q.long <= max(p.long, r.long) &&
-				   q.long >= min(p.long, r.long) &&
-				   q.lat <= max(p.lat, r.lat) &&
-				   q.lat >= min(p.lat, r.lat)
+					q.long >= min(p.long, r.long) &&
+					q.lat <= max(p.lat, r.lat) &&
+					q.lat >= min(p.lat, r.lat)
 			}
 			fn orientation(p: Coords, q: Coords, r: Coords) -> PointsOrientation {
-				let val = ((q.lat - p.lat) * (r.long - q.long)) - ((q.long - p.long) * (r.lat - q.lat));
+				let val =
+					((q.lat - p.lat) * (r.long - q.long)) - ((q.long - p.long) * (r.lat - q.lat));
 				match val {
-					val if val > 0 => {
-						PointsOrientation::Clockwise
-					}
-					val if val < 0 => {
-						PointsOrientation::Counterclockwise
-					}
-					_ => {
-						PointsOrientation::Collinear
-					}
+					val if val > 0 => PointsOrientation::Clockwise,
+					val if val < 0 => PointsOrientation::Counterclockwise,
+					_ => PointsOrientation::Collinear,
 				}
 			}
 
@@ -505,10 +524,10 @@ impl<CoordsBounds: Get<(Coords, Coords)>, StringLimit>
 			let o3 = orientation(p2, q2, p1);
 			let o4 = orientation(p2, q2, q1);
 			if (o1 != o2 && o3 != o4) ||
-			   (o1 == PointsOrientation::Collinear && on_segment(p1, p2, q1)) ||
-			   (o2 == PointsOrientation::Collinear && on_segment(p1, q2, q1)) ||
-			   (o3 == PointsOrientation::Collinear && on_segment(p2, p1, q2)) ||
-			   (o4 == PointsOrientation::Collinear && on_segment(p2, q1, q2))
+				(o1 == PointsOrientation::Collinear && on_segment(p1, p2, q1)) ||
+				(o2 == PointsOrientation::Collinear && on_segment(p1, q2, q1)) ||
+				(o3 == PointsOrientation::Collinear && on_segment(p2, p1, q2)) ||
+				(o4 == PointsOrientation::Collinear && on_segment(p2, q1, q2))
 			{
 				return true
 			}
@@ -531,9 +550,7 @@ impl<CoordsBounds: Get<(Coords, Coords)>, StringLimit>
 		let mut data = data.unwrap();
 
 		// pop last point if it's the same as first
-		if data.demarcation.len() > 1 &&
-		   data.demarcation.first() == data.demarcation.last()
-		{
+		if data.demarcation.len() > 1 && data.demarcation.first() == data.demarcation.last() {
 			data.demarcation.pop();
 		}
 
@@ -574,7 +591,16 @@ impl<CoordsBounds: Get<(Coords, Coords)>, StringLimit>
 }
 
 #[derive(
-	Clone, Eq, PartialEq, Encode, Decode, RuntimeDebug, MaxEncodedLen, scale_info::TypeInfo, Serialize, Deserialize,
+	Clone,
+	Eq,
+	PartialEq,
+	Encode,
+	Decode,
+	RuntimeDebug,
+	MaxEncodedLen,
+	scale_info::TypeInfo,
+	Serialize,
+	Deserialize,
 )]
 pub struct ContractsCallFilter;
 
@@ -607,12 +633,11 @@ impl Dispatchable for DispatchableSubstrateBridgeCall {
 		origin: Self::RuntimeOrigin,
 	) -> sp_runtime::DispatchResultWithInfo<Self::PostInfo> {
 		match self.0 {
-			bridge_types::substrate::BridgeCall::ParachainApp(_) => {
+			bridge_types::substrate::BridgeCall::ParachainApp(_) =>
 				Err(DispatchErrorWithPostInfo {
 					post_info: Default::default(),
 					error: DispatchError::Other("Unavailable"),
-				})
-			},
+				}),
 			bridge_types::substrate::BridgeCall::XCMApp(_) => Err(DispatchErrorWithPostInfo {
 				post_info: Default::default(),
 				error: DispatchError::Other("Unavailable"),
@@ -696,9 +721,8 @@ impl bridge_types::traits::Verifier for MultiVerifier {
 		proof: &Self::Proof,
 	) -> frame_support::pallet_prelude::DispatchResult {
 		match proof {
-			MultiProof::Multisig(proof) => {
-				crate::MultisigVerifier::verify(network_id, message, proof)
-			},
+			MultiProof::Multisig(proof) =>
+				crate::MultisigVerifier::verify(network_id, message, proof),
 			#[cfg(feature = "runtime-benchmarks")]
 			MultiProof::Empty => Ok(()),
 		}
@@ -769,8 +793,8 @@ pub fn get_account_id_from_string_hash(seed: &str) -> AccountId32 {
 
 #[cfg(test)]
 mod senate_filter_tests {
-	use super::{SenateAccountCallFilter, RuntimeCall};
-	use frame_support::{PalletId, traits::Contains};
+	use super::{RuntimeCall, SenateAccountCallFilter};
+	use frame_support::{traits::Contains, PalletId};
 	use sp_runtime::{traits::AccountIdConversion, AccountId32};
 
 	fn accid() -> AccountId32 {
@@ -786,12 +810,32 @@ mod senate_filter_tests {
 		sp_io::TestExternalities::default().execute_with(|| {
 			let calls = vec![
 				RuntimeCall::LLM(pallet_llm::Call::remark { data: vec![].try_into().unwrap() }),
-				RuntimeCall::LLM(pallet_llm::Call::send_llm { to_account: accid(), amount: 1u8.into() }),
-				RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool { to_account: accid(), amount: 1u8.into() }),
-				RuntimeCall::Balances(pallet_balances::Call::transfer { dest: acc(), value: 1u8.into() }),
-				RuntimeCall::Balances(pallet_balances::Call::transfer_keep_alive { dest: acc(), value: 1u8.into() }),
-				RuntimeCall::Assets(pallet_assets::Call::transfer { id: 100.into(), target: acc(), amount: 1u8.into() }),
-				RuntimeCall::Assets(pallet_assets::Call::transfer_keep_alive { id: 100.into(), target: acc(), amount: 1u8.into() }),
+				RuntimeCall::LLM(pallet_llm::Call::send_llm {
+					to_account: accid(),
+					amount: 1u8.into(),
+				}),
+				RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool {
+					to_account: accid(),
+					amount: 1u8.into(),
+				}),
+				RuntimeCall::Balances(pallet_balances::Call::transfer {
+					dest: acc(),
+					value: 1u8.into(),
+				}),
+				RuntimeCall::Balances(pallet_balances::Call::transfer_keep_alive {
+					dest: acc(),
+					value: 1u8.into(),
+				}),
+				RuntimeCall::Assets(pallet_assets::Call::transfer {
+					id: 100.into(),
+					target: acc(),
+					amount: 1u8.into(),
+				}),
+				RuntimeCall::Assets(pallet_assets::Call::transfer_keep_alive {
+					id: 100.into(),
+					target: acc(),
+					amount: 1u8.into(),
+				}),
 			];
 			let call = RuntimeCall::Utility(pallet_utility::Call::batch_all { calls });
 			assert!(SenateAccountCallFilter::contains(&call));
@@ -803,12 +847,32 @@ mod senate_filter_tests {
 		sp_io::TestExternalities::default().execute_with(|| {
 			let calls = vec![
 				RuntimeCall::LLM(pallet_llm::Call::remark { data: vec![].try_into().unwrap() }),
-				RuntimeCall::LLM(pallet_llm::Call::send_llm { to_account: accid(), amount: 1u8.into() }),
-				RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool { to_account: accid(), amount: 1u8.into() }),
-				RuntimeCall::Balances(pallet_balances::Call::transfer { dest: acc(), value: 1u8.into() }),
-				RuntimeCall::Balances(pallet_balances::Call::transfer_keep_alive { dest: acc(), value: 1u8.into() }),
-				RuntimeCall::Assets(pallet_assets::Call::transfer { id: 100.into(), target: acc(), amount: 1u8.into() }),
-				RuntimeCall::Assets(pallet_assets::Call::transfer_keep_alive { id: 100.into(), target: acc(), amount: 1u8.into() }),
+				RuntimeCall::LLM(pallet_llm::Call::send_llm {
+					to_account: accid(),
+					amount: 1u8.into(),
+				}),
+				RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool {
+					to_account: accid(),
+					amount: 1u8.into(),
+				}),
+				RuntimeCall::Balances(pallet_balances::Call::transfer {
+					dest: acc(),
+					value: 1u8.into(),
+				}),
+				RuntimeCall::Balances(pallet_balances::Call::transfer_keep_alive {
+					dest: acc(),
+					value: 1u8.into(),
+				}),
+				RuntimeCall::Assets(pallet_assets::Call::transfer {
+					id: 100.into(),
+					target: acc(),
+					amount: 1u8.into(),
+				}),
+				RuntimeCall::Assets(pallet_assets::Call::transfer_keep_alive {
+					id: 100.into(),
+					target: acc(),
+					amount: 1u8.into(),
+				}),
 			];
 			let call = RuntimeCall::Utility(pallet_utility::Call::batch { calls });
 			assert!(SenateAccountCallFilter::contains(&call));
@@ -818,9 +882,15 @@ mod senate_filter_tests {
 	#[test]
 	fn allows_lld_transfers() {
 		sp_io::TestExternalities::default().execute_with(|| {
-			let c = RuntimeCall::Balances(pallet_balances::Call::transfer { dest: acc(), value: 1u8.into() });
+			let c = RuntimeCall::Balances(pallet_balances::Call::transfer {
+				dest: acc(),
+				value: 1u8.into(),
+			});
 			assert!(SenateAccountCallFilter::contains(&c));
-			let c = RuntimeCall::Balances(pallet_balances::Call::transfer_keep_alive { dest: acc(), value: 1u8.into() });
+			let c = RuntimeCall::Balances(pallet_balances::Call::transfer_keep_alive {
+				dest: acc(),
+				value: 1u8.into(),
+			});
 			assert!(SenateAccountCallFilter::contains(&c));
 		});
 	}
@@ -828,9 +898,17 @@ mod senate_filter_tests {
 	#[test]
 	fn allows_assets_transfers() {
 		sp_io::TestExternalities::default().execute_with(|| {
-			let c = RuntimeCall::Assets(pallet_assets::Call::transfer { id: 100.into(), target: acc(), amount: 1u8.into() });
+			let c = RuntimeCall::Assets(pallet_assets::Call::transfer {
+				id: 100.into(),
+				target: acc(),
+				amount: 1u8.into(),
+			});
 			assert!(SenateAccountCallFilter::contains(&c));
-			let c = RuntimeCall::Assets(pallet_assets::Call::transfer_keep_alive { id: 100.into(), target: acc(), amount: 1u8.into() });
+			let c = RuntimeCall::Assets(pallet_assets::Call::transfer_keep_alive {
+				id: 100.into(),
+				target: acc(),
+				amount: 1u8.into(),
+			});
 			assert!(SenateAccountCallFilter::contains(&c));
 		});
 	}
@@ -840,9 +918,15 @@ mod senate_filter_tests {
 		sp_io::TestExternalities::default().execute_with(|| {
 			let c = RuntimeCall::LLM(pallet_llm::Call::remark { data: vec![].try_into().unwrap() });
 			assert!(SenateAccountCallFilter::contains(&c));
-			let c = RuntimeCall::LLM(pallet_llm::Call::send_llm { to_account: accid(), amount: 1u8.into() });
+			let c = RuntimeCall::LLM(pallet_llm::Call::send_llm {
+				to_account: accid(),
+				amount: 1u8.into(),
+			});
 			assert!(SenateAccountCallFilter::contains(&c));
-			let c = RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool { to_account: accid(), amount: 1u8.into() });
+			let c = RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool {
+				to_account: accid(),
+				amount: 1u8.into(),
+			});
 			assert!(SenateAccountCallFilter::contains(&c));
 		});
 	}
@@ -850,7 +934,9 @@ mod senate_filter_tests {
 	#[test]
 	fn disallows_other_stuff() {
 		sp_io::TestExternalities::default().execute_with(|| {
-			let c = RuntimeCall::System(frame_system::Call::remark { remark: vec![].try_into().unwrap() });
+			let c = RuntimeCall::System(frame_system::Call::remark {
+				remark: vec![].try_into().unwrap(),
+			});
 			assert!(!SenateAccountCallFilter::contains(&c));
 		});
 	}
@@ -858,9 +944,9 @@ mod senate_filter_tests {
 	#[test]
 	fn disallows_batched_other_stuff() {
 		sp_io::TestExternalities::default().execute_with(|| {
-			let calls = vec![
-				RuntimeCall::System(frame_system::Call::remark { remark: vec![].try_into().unwrap() }),
-			];
+			let calls = vec![RuntimeCall::System(frame_system::Call::remark {
+				remark: vec![].try_into().unwrap(),
+			})];
 			let call = RuntimeCall::Utility(pallet_utility::Call::batch { calls });
 			assert!(!SenateAccountCallFilter::contains(&call));
 		});
@@ -869,9 +955,9 @@ mod senate_filter_tests {
 
 #[cfg(test)]
 mod council_filter_tests {
-	use crate::DAYS;
 	use super::{CouncilAccountCallFilter, RuntimeCall};
-	use frame_support::{PalletId, traits::Contains};
+	use crate::DAYS;
+	use frame_support::{traits::Contains, PalletId};
 	use sp_runtime::{traits::AccountIdConversion, AccountId32};
 
 	fn wrap_in_scheduled_batch(calls: Vec<RuntimeCall>) -> RuntimeCall {
@@ -879,7 +965,7 @@ mod council_filter_tests {
 			when: 10 * DAYS,
 			maybe_periodic: None,
 			priority: 1,
-			call: RuntimeCall::Utility(pallet_utility::Call::batch { calls }).into()
+			call: RuntimeCall::Utility(pallet_utility::Call::batch { calls }).into(),
 		})
 	}
 
@@ -910,7 +996,8 @@ mod council_filter_tests {
 				when: 10 * DAYS,
 				maybe_periodic: None,
 				priority: 1,
-				call: RuntimeCall::Utility(pallet_utility::Call::batch_all { calls: vec![] }).into()
+				call: RuntimeCall::Utility(pallet_utility::Call::batch_all { calls: vec![] })
+					.into(),
 			});
 			assert!(CouncilAccountCallFilter::contains(&call));
 		});
@@ -924,7 +1011,7 @@ mod council_filter_tests {
 				when: 10 * DAYS,
 				maybe_periodic: None,
 				priority: 1,
-				call: RuntimeCall::Utility(pallet_utility::Call::batch { calls: vec![] }).into()
+				call: RuntimeCall::Utility(pallet_utility::Call::batch { calls: vec![] }).into(),
 			});
 			assert!(CouncilAccountCallFilter::contains(&call));
 		});
@@ -934,9 +1021,15 @@ mod council_filter_tests {
 	fn allows_scheduled_batched_balances() {
 		sp_io::TestExternalities::default().execute_with(|| {
 			let calls = vec![
-				RuntimeCall::Balances(pallet_balances::Call::transfer { dest: acc(), value: 1u8.into() }),
+				RuntimeCall::Balances(pallet_balances::Call::transfer {
+					dest: acc(),
+					value: 1u8.into(),
+				}),
 				remark_call(),
-				RuntimeCall::Balances(pallet_balances::Call::transfer_keep_alive { dest: acc(), value: 1u8.into() }),
+				RuntimeCall::Balances(pallet_balances::Call::transfer_keep_alive {
+					dest: acc(),
+					value: 1u8.into(),
+				}),
 				remark_call(),
 			];
 			let call = wrap_in_scheduled_batch(calls);
@@ -948,9 +1041,15 @@ mod council_filter_tests {
 	fn allows_scheduled_batched_llm() {
 		sp_io::TestExternalities::default().execute_with(|| {
 			let calls = vec![
-				RuntimeCall::LLM(pallet_llm::Call::send_llm { to_account: accid(), amount: 1u8.into() }),
+				RuntimeCall::LLM(pallet_llm::Call::send_llm {
+					to_account: accid(),
+					amount: 1u8.into(),
+				}),
 				remark_call(),
-				RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool { to_account: accid(), amount: 1u8.into() }),
+				RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool {
+					to_account: accid(),
+					amount: 1u8.into(),
+				}),
 				remark_call(),
 			];
 			let call = wrap_in_scheduled_batch(calls);
@@ -962,9 +1061,17 @@ mod council_filter_tests {
 	fn allows_scheduled_batched_assets() {
 		sp_io::TestExternalities::default().execute_with(|| {
 			let calls = vec![
-				RuntimeCall::Assets(pallet_assets::Call::transfer { id: 100.into(), target: acc(), amount: 1u8.into() }),
+				RuntimeCall::Assets(pallet_assets::Call::transfer {
+					id: 100.into(),
+					target: acc(),
+					amount: 1u8.into(),
+				}),
 				remark_call(),
-				RuntimeCall::Assets(pallet_assets::Call::transfer_keep_alive { id: 100.into(), target: acc(), amount: 1u8.into() }),
+				RuntimeCall::Assets(pallet_assets::Call::transfer_keep_alive {
+					id: 100.into(),
+					target: acc(),
+					amount: 1u8.into(),
+				}),
 				remark_call(),
 			];
 			let call = wrap_in_scheduled_batch(calls);
@@ -979,7 +1086,7 @@ mod council_filter_tests {
 				when: 1 * DAYS,
 				maybe_periodic: None,
 				priority: 1,
-				call: RuntimeCall::Utility(pallet_utility::Call::batch { calls: vec![] }).into()
+				call: RuntimeCall::Utility(pallet_utility::Call::batch { calls: vec![] }).into(),
 			});
 			assert!(!CouncilAccountCallFilter::contains(&call));
 		});
@@ -999,16 +1106,29 @@ mod council_filter_tests {
 	#[test]
 	fn disallows_direct_transfers() {
 		sp_io::TestExternalities::default().execute_with(|| {
-			let call = RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool { to_account: accid(), amount: 1u8.into() });
+			let call = RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool {
+				to_account: accid(),
+				amount: 1u8.into(),
+			});
 			assert!(!CouncilAccountCallFilter::contains(&call));
 
-			let call = RuntimeCall::LLM(pallet_llm::Call::send_llm { to_account: accid(), amount: 1u8.into() });
+			let call = RuntimeCall::LLM(pallet_llm::Call::send_llm {
+				to_account: accid(),
+				amount: 1u8.into(),
+			});
 			assert!(!CouncilAccountCallFilter::contains(&call));
 
-			let call = RuntimeCall::Assets(pallet_assets::Call::transfer { id: 100.into(), target: acc().into(), amount: 1u8.into() });
+			let call = RuntimeCall::Assets(pallet_assets::Call::transfer {
+				id: 100.into(),
+				target: acc().into(),
+				amount: 1u8.into(),
+			});
 			assert!(!CouncilAccountCallFilter::contains(&call));
 
-			let call = RuntimeCall::Balances(pallet_balances::Call::transfer { dest: acc(), value: 1u8.into() });
+			let call = RuntimeCall::Balances(pallet_balances::Call::transfer {
+				dest: acc(),
+				value: 1u8.into(),
+			});
 			assert!(!CouncilAccountCallFilter::contains(&call));
 		});
 	}
@@ -1017,9 +1137,8 @@ mod council_filter_tests {
 #[cfg(test)]
 mod ministry_of_finance_call_filter_tests {
 	use super::{MinistryOfFinanceCallFilter, RuntimeCall};
-	use frame_support::{PalletId, traits::InstanceFilter};
+	use frame_support::{traits::InstanceFilter, PalletId};
 	use sp_runtime::{traits::AccountIdConversion, AccountId32};
-
 
 	fn accid() -> AccountId32 {
 		PalletId(*b"12345678").into_account_truncating()
@@ -1032,7 +1151,8 @@ mod ministry_of_finance_call_filter_tests {
 	#[test]
 	fn allows_remark() {
 		sp_io::TestExternalities::default().execute_with(|| {
-			let call = RuntimeCall::LLM(pallet_llm::Call::remark { data: vec![].try_into().unwrap() });
+			let call =
+				RuntimeCall::LLM(pallet_llm::Call::remark { data: vec![].try_into().unwrap() });
 			assert!(MinistryOfFinanceCallFilter::FullRights.filter(&call));
 			assert!(MinistryOfFinanceCallFilter::PooledMeritsRightsOnly.filter(&call));
 		});
@@ -1041,8 +1161,10 @@ mod ministry_of_finance_call_filter_tests {
 	#[test]
 	fn allows_batch() {
 		sp_io::TestExternalities::default().execute_with(|| {
-			let call = RuntimeCall::LLM(pallet_llm::Call::remark { data: vec![].try_into().unwrap() });
-			let call = RuntimeCall::Utility(pallet_utility::Call::batch { calls: vec![call] }).into();
+			let call =
+				RuntimeCall::LLM(pallet_llm::Call::remark { data: vec![].try_into().unwrap() });
+			let call =
+				RuntimeCall::Utility(pallet_utility::Call::batch { calls: vec![call] }).into();
 			assert!(MinistryOfFinanceCallFilter::FullRights.filter(&call));
 			assert!(MinistryOfFinanceCallFilter::PooledMeritsRightsOnly.filter(&call));
 		});
@@ -1051,8 +1173,10 @@ mod ministry_of_finance_call_filter_tests {
 	#[test]
 	fn allows_batch_all() {
 		sp_io::TestExternalities::default().execute_with(|| {
-			let call = RuntimeCall::LLM(pallet_llm::Call::remark { data: vec![].try_into().unwrap() });
-			let call = RuntimeCall::Utility(pallet_utility::Call::batch_all { calls: vec![call] }).into();
+			let call =
+				RuntimeCall::LLM(pallet_llm::Call::remark { data: vec![].try_into().unwrap() });
+			let call =
+				RuntimeCall::Utility(pallet_utility::Call::batch_all { calls: vec![call] }).into();
 			assert!(MinistryOfFinanceCallFilter::FullRights.filter(&call));
 			assert!(MinistryOfFinanceCallFilter::PooledMeritsRightsOnly.filter(&call));
 		});
@@ -1061,7 +1185,10 @@ mod ministry_of_finance_call_filter_tests {
 	#[test]
 	fn allows_send_to_politipool() {
 		sp_io::TestExternalities::default().execute_with(|| {
-			let call = RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool { to_account: accid(), amount: 1u8.into() });
+			let call = RuntimeCall::LLM(pallet_llm::Call::send_llm_to_politipool {
+				to_account: accid(),
+				amount: 1u8.into(),
+			});
 			assert!(MinistryOfFinanceCallFilter::FullRights.filter(&call));
 			assert!(MinistryOfFinanceCallFilter::PooledMeritsRightsOnly.filter(&call));
 		});
@@ -1070,7 +1197,10 @@ mod ministry_of_finance_call_filter_tests {
 	#[test]
 	fn allows_tier1_liquid_transfer_lld() {
 		sp_io::TestExternalities::default().execute_with(|| {
-			let call = RuntimeCall::Balances(pallet_balances::Call::transfer { dest: acc(), value: 1u8.into() });
+			let call = RuntimeCall::Balances(pallet_balances::Call::transfer {
+				dest: acc(),
+				value: 1u8.into(),
+			});
 			assert!(MinistryOfFinanceCallFilter::FullRights.filter(&call));
 		});
 	}
@@ -1078,7 +1208,10 @@ mod ministry_of_finance_call_filter_tests {
 	#[test]
 	fn allows_tier1_liquid_transfer_llm() {
 		sp_io::TestExternalities::default().execute_with(|| {
-			let call = RuntimeCall::LLM(pallet_llm::Call::send_llm { to_account: accid(), amount: 1u8.into() });
+			let call = RuntimeCall::LLM(pallet_llm::Call::send_llm {
+				to_account: accid(),
+				amount: 1u8.into(),
+			});
 			assert!(MinistryOfFinanceCallFilter::FullRights.filter(&call));
 		});
 	}
@@ -1086,7 +1219,11 @@ mod ministry_of_finance_call_filter_tests {
 	#[test]
 	fn allows_tier1_liquid_transfer_assets() {
 		sp_io::TestExternalities::default().execute_with(|| {
-			let call = RuntimeCall::Assets(pallet_assets::Call::transfer { id: 1u32.into(), target: acc(), amount: 1u8.into() });
+			let call = RuntimeCall::Assets(pallet_assets::Call::transfer {
+				id: 1u32.into(),
+				target: acc(),
+				amount: 1u8.into(),
+			});
 			assert!(MinistryOfFinanceCallFilter::FullRights.filter(&call));
 		});
 	}
@@ -1094,7 +1231,10 @@ mod ministry_of_finance_call_filter_tests {
 	#[test]
 	fn disallows_tier2_liquid_transfer_lld() {
 		sp_io::TestExternalities::default().execute_with(|| {
-			let call = RuntimeCall::Balances(pallet_balances::Call::transfer { dest: acc(), value: 1u8.into() });
+			let call = RuntimeCall::Balances(pallet_balances::Call::transfer {
+				dest: acc(),
+				value: 1u8.into(),
+			});
 			assert!(!MinistryOfFinanceCallFilter::PooledMeritsRightsOnly.filter(&call));
 		});
 	}
@@ -1102,7 +1242,10 @@ mod ministry_of_finance_call_filter_tests {
 	#[test]
 	fn disallows_tier2_liquid_transfer_llm() {
 		sp_io::TestExternalities::default().execute_with(|| {
-			let call = RuntimeCall::LLM(pallet_llm::Call::send_llm { to_account: accid(), amount: 1u8.into() });
+			let call = RuntimeCall::LLM(pallet_llm::Call::send_llm {
+				to_account: accid(),
+				amount: 1u8.into(),
+			});
 			assert!(!MinistryOfFinanceCallFilter::PooledMeritsRightsOnly.filter(&call));
 		});
 	}
@@ -1110,7 +1253,11 @@ mod ministry_of_finance_call_filter_tests {
 	#[test]
 	fn disallows_tier2_liquid_transfer_assets() {
 		sp_io::TestExternalities::default().execute_with(|| {
-			let call = RuntimeCall::Assets(pallet_assets::Call::transfer { id: 1u32.into(), target: acc(), amount: 1u8.into() });
+			let call = RuntimeCall::Assets(pallet_assets::Call::transfer {
+				id: 1u32.into(),
+				target: acc(),
+				amount: 1u8.into(),
+			});
 			assert!(!MinistryOfFinanceCallFilter::PooledMeritsRightsOnly.filter(&call));
 		});
 	}
@@ -1214,7 +1361,7 @@ mod multiplier_tests {
 	}
 
 	pub use node_primitives::Signature;
-	use sp_core::{Public, Pair};
+	use sp_core::{Pair, Public};
 	use sp_runtime::traits::{IdentifyAccount, Verify};
 
 	type AccountPublic = <Signature as Verify>::Signer;
@@ -1317,7 +1464,7 @@ mod multiplier_tests {
 			// See the example in the doc of `TargetedFeeAdjustment`. are at least 0.234, hence
 			// `fm > 1.234`.
 			// we use 2 days, as our avg block time is 6sec instead of default 3 sec
-			for _ in 0..(2*DAYS) {
+			for _ in 0..(2 * DAYS) {
 				let next = runtime_multiplier_update(fm);
 				fm = next;
 			}
@@ -1606,21 +1753,22 @@ mod multiplier_tests {
 		assert!(!LandMetadataValidator::<TestCoords>::validate_metadata(1, 1, &self_intersecting));
 	}
 
+	use crate::{
+		sp_api_hidden_includes_construct_runtime::hidden_include::traits::PrivilegeCmp, EnsureCmp,
+		OriginCaller,
+	};
+	use core::cmp::Ordering;
 	use frame_system::{EnsureRoot, RawOrigin};
 	use node_primitives::AccountId;
-	use core::cmp::Ordering;
 	use sp_runtime::testing::sr25519;
-	use crate::{EnsureCmp, OriginCaller, sp_api_hidden_includes_construct_runtime::hidden_include::traits::PrivilegeCmp};
 
 	#[test]
 	fn ensure_cmp_works_for_root() {
-		type OriginPrivilegeCmp = EnsureCmp<
-				EnsureRoot<AccountId>
-		>;
+		type OriginPrivilegeCmp = EnsureCmp<EnsureRoot<AccountId>>;
 
 		assert_eq!(
 			OriginPrivilegeCmp::cmp_privilege(
-				&OriginCaller::system(RawOrigin::Root), 
+				&OriginCaller::system(RawOrigin::Root),
 				&OriginCaller::system(RawOrigin::Root)
 			),
 			Some(Ordering::Equal)
@@ -1631,13 +1779,11 @@ mod multiplier_tests {
 	fn ensure_cmp_do_not_works_for_account() {
 		let alice = get_account_id_from_seed::<sr25519::Public>("Alice");
 
-		type OriginPrivilegeCmp = EnsureCmp<
-				EnsureRoot<AccountId>
-		>;
+		type OriginPrivilegeCmp = EnsureCmp<EnsureRoot<AccountId>>;
 
 		assert_eq!(
 			OriginPrivilegeCmp::cmp_privilege(
-				&OriginCaller::system(RawOrigin::Signed(alice)), 
+				&OriginCaller::system(RawOrigin::Signed(alice)),
 				&OriginCaller::system(RawOrigin::Root)
 			),
 			None

@@ -151,11 +151,11 @@ pub mod weights;
 
 mod extra_mutator;
 pub use extra_mutator::*;
+mod eresidency;
 mod functions;
 mod impl_fungibles;
 mod impl_stored_map;
 mod types;
-mod eresidency;
 pub use types::*;
 
 use scale_info::TypeInfo;
@@ -373,23 +373,13 @@ pub mod pallet {
 
 	#[pallet::storage]
 	/// Eresidency requirements of asset
-	pub(super) type Parameters<T: Config<I>, I: 'static = ()> = StorageMap<
-		_,
-		Blake2_128Concat,
-		T::AssetId,
-		AssetParameters,
-		ValueQuery,
-	>;
+	pub(super) type Parameters<T: Config<I>, I: 'static = ()> =
+		StorageMap<_, Blake2_128Concat, T::AssetId, AssetParameters, ValueQuery>;
 
 	#[pallet::storage]
-		/// Related company of asset
-		pub(super) type RelatedCompany<T: Config<I>, I: 'static = ()> = StorageMap<
-			_,
-			Blake2_128Concat,
-			T::AssetId,
-			AssetRelatedCompany,
-			ValueQuery,
-		>;
+	/// Related company of asset
+	pub(super) type RelatedCompany<T: Config<I>, I: 'static = ()> =
+		StorageMap<_, Blake2_128Concat, T::AssetId, AssetRelatedCompany, ValueQuery>;
 
 	#[pallet::genesis_config]
 	#[derive(frame_support::DefaultNoBound)]
@@ -548,15 +538,9 @@ pub mod pallet {
 		/// Some account `who` was blocked.
 		Blocked { asset_id: T::AssetId, who: T::AccountId },
 		/// Asset Parameters set
-		ParametersSet {
-			asset_id: T::AssetId,
-			parameters: AssetParameters,
-		},
+		ParametersSet { asset_id: T::AssetId, parameters: AssetParameters },
 		/// Related company set
-		RelatedCompanySet {
-			asset_id: T::AssetId,
-			company: AssetRelatedCompany,
-		},
+		RelatedCompanySet { asset_id: T::AssetId, company: AssetRelatedCompany },
 	}
 
 	#[pallet::error]
@@ -1749,7 +1733,6 @@ pub mod pallet {
 			RelatedCompany::<T, I>::insert(&id, company);
 			Ok(())
 		}
-
 	}
 
 	/// Implements [`AccountTouch`] trait.

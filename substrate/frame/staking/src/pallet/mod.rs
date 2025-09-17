@@ -15,7 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// File has been modified by Liberland in 2023. All modifications by Liberland are distributed under the MIT license.
+// File has been modified by Liberland in 2023. All modifications by Liberland are distributed under
+// the MIT license.
 
 // You should have received a copy of the MIT license along with this program. If not, see https://opensource.org/licenses/MIT
 
@@ -28,23 +29,21 @@ use frame_election_provider_support::{
 use frame_support::{
 	pallet_prelude::*,
 	traits::{
-		Currency, Defensive, DefensiveResult, DefensiveSaturating, EnsureOrigin,
-		EstimateNextNewSession, Get, LockIdentifier, LockableCurrency, OnUnbalanced, TryCollect,
-		UnixTime,
-		tokens::ExistenceRequirement,
+		tokens::ExistenceRequirement, Currency, Defensive, DefensiveResult, DefensiveSaturating,
+		EnsureOrigin, EstimateNextNewSession, Get, LockIdentifier, LockableCurrency, OnUnbalanced,
+		TryCollect, UnixTime,
 	},
 	weights::Weight,
 	BoundedVec,
 };
 use frame_system::{ensure_root, ensure_signed, pallet_prelude::*};
+use liberland_traits::CitizenshipChecker;
 use sp_runtime::{
 	traits::{CheckedSub, SaturatedConversion, StaticLookup, Zero},
 	ArithmeticError, Perbill, Percent,
 };
 use sp_staking::{EraIndex, SessionIndex};
 use sp_std::prelude::*;
-use liberland_traits::CitizenshipChecker;
-
 
 mod impls;
 
@@ -591,7 +590,6 @@ pub mod pallet {
 	/// (`CountFor*`) in the system compared to the configured max (`Max*Count`).
 	#[pallet::storage]
 	pub(crate) type ChillThreshold<T: Config> = StorageValue<_, Percent, OptionQuery>;
-
 
 	/// Is citizenship required for Controller to start validating?
 	#[pallet::storage]
@@ -1815,8 +1813,9 @@ pub mod pallet {
 			Ok(())
 		}
 
-		/// Take the to origin as a caller and lock up `value` of its balance in `to` account as a stash.
-		/// A `value` is transferred into `to` account and then bounded using `bond` or `bond_extra`.
+		/// Take the to origin as a caller and lock up `value` of its balance in `to` account as a
+		/// stash. A `value` is transferred into `to` account and then bounded using `bond` or
+		/// `bond_extra`.
 		///
 		/// `value` must be more than the `minimum_balance` specified by `T::Currency`.
 		///
@@ -1830,27 +1829,16 @@ pub mod pallet {
 			to: T::AccountId,
 			#[pallet::compact] value: BalanceOf<T>,
 		) -> DispatchResult {
-			let sender: T::AccountId = ensure_signed(origin)?; 
-			T::Currency::transfer(
-				&sender,
-				&to,
-				value,
-				ExistenceRequirement::KeepAlive,
-			).map_err(|_| Error::<T>::TransferFailed)?;
+			let sender: T::AccountId = ensure_signed(origin)?;
+			T::Currency::transfer(&sender, &to, value, ExistenceRequirement::KeepAlive)
+				.map_err(|_| Error::<T>::TransferFailed)?;
 
 			let recipient = T::RuntimeOrigin::from(Some(to.clone()).into());
 			if Bonded::<T>::contains_key(&to) {
-				return Pallet::<T>::bond_extra(
-					recipient,
-					value
-				)
+				return Pallet::<T>::bond_extra(recipient, value)
 			}
-			
-			Pallet::<T>::bond(
-				recipient,
-				value,
-				RewardDestination::Staked,
-			)
+
+			Pallet::<T>::bond(recipient, value, RewardDestination::Staked)
 		}
 	}
 }

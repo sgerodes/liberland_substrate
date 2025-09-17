@@ -21,7 +21,7 @@ fn constitution_origin(ayes: u64, nays: u64, aye_voters: u64, nay_voters: u64) -
 fn sample_legislation() -> BoundedVec<LegislationContent, ConstU32<1024>> {
 	let section: LegislationContent = vec![1, 2, 3].try_into().unwrap();
 
-	return vec![section.clone(), section.clone(), section.clone()].try_into().unwrap();
+	return vec![section.clone(), section.clone(), section.clone()].try_into().unwrap()
 }
 
 #[test]

@@ -30,8 +30,10 @@
 //! - `repeal_legislation_section` - Repeals single legislation.
 //! - `submit_veto` - Registers veto for given legislation (or its specific section) for the signer.
 //! - `revert_veto` - Removes veto for given legislation (or its specific section) for the signer.
-//! - `trigger_headcount_veto` - Repeals legislation (all sections) if veto count requirements are met for it.
-//! - `trigger_section_headcount_veto` - Repeals legislation section if veto count requirements are met for it.
+//! - `trigger_headcount_veto` - Repeals legislation (all sections) if veto count requirements are
+//!   met for it.
+//! - `trigger_section_headcount_veto` - Repeals legislation section if veto count requirements are
+//!   met for it.
 //!
 //!
 //! License: MIT
@@ -296,7 +298,7 @@ pub mod pallet {
 				Constitution => {
 					T::ConstitutionOrigin::ensure_origin(origin)?;
 					if id.year == 0 && id.index == 0 {
-						return Err(Error::<T>::ProtectedLegislation.into());
+						return Err(Error::<T>::ProtectedLegislation.into())
 					}
 				},
 				InternationalTreaty => {
@@ -359,7 +361,7 @@ pub mod pallet {
 				Constitution => {
 					T::ConstitutionOrigin::ensure_origin(origin)?;
 					if id.year == 0 && id.index == 0 {
-						return Err(Error::<T>::ProtectedLegislation.into());
+						return Err(Error::<T>::ProtectedLegislation.into())
 					}
 				},
 				InternationalTreaty => {
@@ -542,7 +544,7 @@ pub mod pallet {
 				Constitution => {
 					T::ConstitutionOrigin::ensure_origin(origin)?;
 					if id.year == 0 && id.index == 0 {
-						return Err(Error::<T>::ProtectedLegislation.into());
+						return Err(Error::<T>::ProtectedLegislation.into())
 					}
 				},
 				InternationalTreaty => {

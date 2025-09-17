@@ -18,25 +18,23 @@
 
 //! Substrate chain configurations.
 
-// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under the MIT license.
+// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under
+// the MIT license.
 
 // You should have received a copy of the MIT license along with this program. If not, see https://opensource.org/licenses/MIT
 
 use grandpa_primitives::AuthorityId as GrandpaId;
 use kitchensink_runtime::{
-	constants::currency::*, constants::llm::*, wasm_binary_unwrap,
-	BabeConfig, BalancesConfig, Block, CouncilConfig,
-	DemocracyConfig, ElectionsConfig, ImOnlineConfig,
-	MaxNominations, SessionConfig, SessionKeys,
-	StakerStatus, StakingConfig, SudoConfig, SystemConfig,
-	TechnicalCommitteeConfig, LiberlandInitializerConfig,
-	CompanyRegistryOfficePalletId, CompanyRegistryOfficeConfig,
-	LandRegistryOfficeConfig, IdentityOfficeConfig, CompanyRegistryConfig,
-	IdentityOfficePalletId, AssetRegistryOfficeConfig,
-	LandRegistryOfficePalletId, AssetRegistryOfficePalletId,
+	constants::{currency::*, llm::*},
+	impls::{IdentityCallFilter, NftsCallFilter, RegistryCallFilter},
+	wasm_binary_unwrap, AssetRegistryOfficeConfig, AssetRegistryOfficePalletId, BabeConfig,
+	BalancesConfig, Block, CompanyRegistryConfig, CompanyRegistryOfficeConfig,
+	CompanyRegistryOfficePalletId, CouncilConfig, DemocracyConfig, ElectionsConfig,
+	IdentityOfficeConfig, IdentityOfficePalletId, ImOnlineConfig, LandRegistryOfficeConfig,
+	LandRegistryOfficePalletId, LiberlandInitializerConfig, MaxNominations,
 	MetaverseLandRegistryOfficeConfig, MetaverseLandRegistryOfficePalletId,
-	SenateConfig, MinistryOfFinanceOfficeConfig,
-	impls::{RegistryCallFilter, IdentityCallFilter, NftsCallFilter},
+	MinistryOfFinanceOfficeConfig, SenateConfig, SessionConfig, SessionKeys, StakerStatus,
+	StakingConfig, SudoConfig, SystemConfig, TechnicalCommitteeConfig,
 };
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use sc_chain_spec::{ChainSpecExtension, Properties};
@@ -45,9 +43,12 @@ use sc_telemetry::TelemetryEndpoints;
 use serde::{Deserialize, Serialize};
 use sp_authority_discovery::AuthorityId as AuthorityDiscoveryId;
 use sp_consensus_babe::AuthorityId as BabeId;
-use sp_core::{crypto::{Ss58Codec, UncheckedInto}, sr25519, Pair, Public};
+use sp_core::{
+	crypto::{Ss58Codec, UncheckedInto},
+	sr25519, Pair, Public,
+};
 use sp_runtime::{
-	traits::{IdentifyAccount, Verify, AccountIdConversion},
+	traits::{AccountIdConversion, IdentifyAccount, Verify},
 	Perbill,
 };
 
@@ -87,12 +88,14 @@ fn session_keys(
 
 /// Mainnet config.
 pub fn mainnet_config() -> ChainSpec {
-	ChainSpec::from_json_bytes(&include_bytes!("../../../../specs/mainnet.raw.json")[..]).expect("Broken mainnet chain spec")
+	ChainSpec::from_json_bytes(&include_bytes!("../../../../specs/mainnet.raw.json")[..])
+		.expect("Broken mainnet chain spec")
 }
 
 /// Bastiat testnet config.
 pub fn bastiat_testnet_config() -> ChainSpec {
-	ChainSpec::from_json_bytes(&include_bytes!("../../../../specs/bastiat.raw.json")[..]).expect("Broken bastiat chain spec")
+	ChainSpec::from_json_bytes(&include_bytes!("../../../../specs/bastiat.raw.json")[..])
+		.expect("Broken bastiat chain spec")
 }
 
 fn staging_testnet_config_genesis() -> RuntimeGenesisConfig {
@@ -127,7 +130,6 @@ fn staging_testnet_config_genesis() -> RuntimeGenesisConfig {
 		),
 	];
 
-
 	let citizens = vec![
 		// F
 		AccountId::from_ss58check("5CCi1rPi7cphC6iE9mWkYvbLf57b9N233nFG8hM5zjvYZpLi").unwrap(),
@@ -152,18 +154,33 @@ fn staging_testnet_config_genesis() -> RuntimeGenesisConfig {
 	];
 
 	let min_citizenship_llm = 5000 * GRAINS_IN_LLM;
-	let mut citizens_with_balance: Vec<(AccountId, Balance, Balance)> = citizens.iter().map(|id| (id.clone(), 0, 0)).collect();
+	let mut citizens_with_balance: Vec<(AccountId, Balance, Balance)> =
+		citizens.iter().map(|id| (id.clone(), 0, 0)).collect();
 	citizens_with_balance.extend(vec![
 		// Nodes 1-3
-		(AccountId::from_ss58check("5FyJBpWan9YzAyjwEzKcns4SJYrcJcAb3PKRB7rb8cymgryX").unwrap(), min_citizenship_llm, min_citizenship_llm),
-		(AccountId::from_ss58check("5Df7LyLkNq8BymLP22G7Z696kxao1bMqYLMnGKmPZKqZhrbh").unwrap(), min_citizenship_llm, min_citizenship_llm),
-		(AccountId::from_ss58check("5CLUTtAS3w6zLsj7ffZSb7stKKczVUJXHztstmRq1aUSMzHT").unwrap(), min_citizenship_llm, min_citizenship_llm)
+		(
+			AccountId::from_ss58check("5FyJBpWan9YzAyjwEzKcns4SJYrcJcAb3PKRB7rb8cymgryX").unwrap(),
+			min_citizenship_llm,
+			min_citizenship_llm,
+		),
+		(
+			AccountId::from_ss58check("5Df7LyLkNq8BymLP22G7Z696kxao1bMqYLMnGKmPZKqZhrbh").unwrap(),
+			min_citizenship_llm,
+			min_citizenship_llm,
+		),
+		(
+			AccountId::from_ss58check("5CLUTtAS3w6zLsj7ffZSb7stKKczVUJXHztstmRq1aUSMzHT").unwrap(),
+			min_citizenship_llm,
+			min_citizenship_llm,
+		),
 	]);
 
-	let registrar_key = AccountId::from_ss58check("5G96noBmnpNgpsaVXMsEs7961NU1zUNqQractuCp5R1hKejm").unwrap();
-	let root_key: AccountId = AccountId::from_ss58check("5GZXCJvjfniCCLmKiyqzXLdwgcSgiQNUtsuFVhrpvfjopShL").unwrap();
+	let registrar_key =
+		AccountId::from_ss58check("5G96noBmnpNgpsaVXMsEs7961NU1zUNqQractuCp5R1hKejm").unwrap();
+	let root_key: AccountId =
+		AccountId::from_ss58check("5GZXCJvjfniCCLmKiyqzXLdwgcSgiQNUtsuFVhrpvfjopShL").unwrap();
 
-	let mut endowed_accounts: Vec<AccountId> = vec![root_key.clone(), registrar_key.clone(),];
+	let mut endowed_accounts: Vec<AccountId> = vec![root_key.clone(), registrar_key.clone()];
 	endowed_accounts.append(&mut citizens.clone());
 
 	let technical_committee = vec![
@@ -330,14 +347,23 @@ pub fn testnet_genesis(
 	const STASH: Balance = ENDOWMENT / 1000;
 	const INITIAL_STAKE: Balance = 5000 * GRAINS_IN_LLM;
 
-
 	// Add Prefunded accounts
 	let f_ac: Vec<AccountId> = vec![
-		array_bytes::hex_n_into_unchecked("061a7f0a43e35d16f330e64c1a4e5000db4ba064fc3630cc4a9e2027899a5a6f"), // F
-		array_bytes::hex_n_into_unchecked("b86373a2dff0a7b5741fd7e1857de41353fca3b924f14eae5f4c70d69e949150"), // N
-		array_bytes::hex_n_into_unchecked("ba14fb5a00f052330c9c09e0467bce1d7896edefe92851b893e777aade53f921"), // D
-		array_bytes::hex_n_into_unchecked("f874b8c112a9bb565e0798d9b5dcfee0fdbd54dd0fcc865c1251a75bd3faee45"), // M
-		array_bytes::hex_n_into_unchecked("52fd11392742ccf58bcff90c33ca15bdf4bd3416aabcd5d51a654c1f387b6d18"), // V
+		array_bytes::hex_n_into_unchecked(
+			"061a7f0a43e35d16f330e64c1a4e5000db4ba064fc3630cc4a9e2027899a5a6f",
+		), // F
+		array_bytes::hex_n_into_unchecked(
+			"b86373a2dff0a7b5741fd7e1857de41353fca3b924f14eae5f4c70d69e949150",
+		), // N
+		array_bytes::hex_n_into_unchecked(
+			"ba14fb5a00f052330c9c09e0467bce1d7896edefe92851b893e777aade53f921",
+		), // D
+		array_bytes::hex_n_into_unchecked(
+			"f874b8c112a9bb565e0798d9b5dcfee0fdbd54dd0fcc865c1251a75bd3faee45",
+		), // M
+		array_bytes::hex_n_into_unchecked(
+			"52fd11392742ccf58bcff90c33ca15bdf4bd3416aabcd5d51a654c1f387b6d18",
+		), // V
 	];
 
 	// rewrite, not to use for loop
@@ -348,23 +374,27 @@ pub fn testnet_genesis(
 	}
 
 	// endow all citizens.
-	initial_citizens.iter().map(|x| &x.0)
-		.for_each(|x| {
-			if !endowed_accounts.contains(x) {
-				endowed_accounts.push(x.clone())
-			}
-		});
+	initial_citizens.iter().map(|x| &x.0).for_each(|x| {
+		if !endowed_accounts.contains(x) {
+			endowed_accounts.push(x.clone())
+		}
+	});
 
-	let technical_committee = technical_committee.unwrap_or(
-		endowed_accounts
-				.iter()
-				.take((num_endowed_accounts + 1) / 2)
-				.cloned()
-				.collect());
+	let technical_committee = technical_committee
+		.unwrap_or(endowed_accounts.iter().take((num_endowed_accounts + 1) / 2).cloned().collect());
 
-	let identity_clerks = offices_clerks.iter().map(|acc| (acc.clone(), IdentityCallFilter::Judgement)).collect();
-	let registry_clerks = offices_clerks.iter().map(|acc| (acc.clone(), RegistryCallFilter::RegisterOnly)).collect();
-	let nfts_clerks: Vec<(AccountId, NftsCallFilter)> = offices_clerks.iter().map(|acc| (acc.clone(), NftsCallFilter::ManageItems)).collect();
+	let identity_clerks = offices_clerks
+		.iter()
+		.map(|acc| (acc.clone(), IdentityCallFilter::Judgement))
+		.collect();
+	let registry_clerks = offices_clerks
+		.iter()
+		.map(|acc| (acc.clone(), RegistryCallFilter::RegisterOnly))
+		.collect();
+	let nfts_clerks: Vec<(AccountId, NftsCallFilter)> = offices_clerks
+		.iter()
+		.map(|acc| (acc.clone(), NftsCallFilter::ManageItems))
+		.collect();
 
 	RuntimeGenesisConfig {
 		system: SystemConfig { code: wasm_binary_unwrap().to_vec(), ..Default::default() },
@@ -430,13 +460,15 @@ pub fn testnet_genesis(
 			citizenship_registrar: Some(IdentityOfficePalletId::get().into_account_truncating()),
 			initial_citizens,
 			land_registrar: Some(LandRegistryOfficePalletId::get().into_account_truncating()),
-			metaverse_land_registrar: Some(MetaverseLandRegistryOfficePalletId::get().into_account_truncating()),
+			metaverse_land_registrar: Some(
+				MetaverseLandRegistryOfficePalletId::get().into_account_truncating(),
+			),
 			asset_registrar: Some(AssetRegistryOfficePalletId::get().into_account_truncating()),
 		},
 		company_registry: CompanyRegistryConfig {
-			registries: vec![
-				CompanyRegistryOfficePalletId::get().into_account_truncating()
-			].try_into().unwrap(),
+			registries: vec![CompanyRegistryOfficePalletId::get().into_account_truncating()]
+				.try_into()
+				.unwrap(),
 			entities: vec![],
 		},
 		identity_office: IdentityOfficeConfig {
@@ -483,12 +515,42 @@ fn development_config_genesis() -> RuntimeGenesisConfig {
 			(alice.clone(), total_llm, locked_llm),
 			(bob.clone(), total_llm, locked_llm),
 			(get_account_id_from_seed::<sr25519::Public>("Charlie"), total_llm, locked_llm),
-			(AccountId::from_ss58check("5G3uZjEpvNAQ6U2eUjnMb66B8g6d8wyB68x6CfkRPNcno8eR").unwrap(), total_llm, locked_llm), // Citizen1
-			(AccountId::from_ss58check("5GGgzku3kHSnAjxk7HBNeYzghSLsQQQGGznZA7u3h6wZUseo").unwrap(), total_llm, locked_llm), // Dorian
-			(AccountId::from_ss58check("5GZXCJvjfniCCLmKiyqzXLdwgcSgiQNUtsuFVhrpvfjopShL").unwrap(), total_llm, locked_llm), // Laissez sudo
-			(AccountId::from_ss58check("5GjYePC6HKJGGnEzEZzSvimy6uctuMat4Kr2tjACtKyY9nhT").unwrap(), total_llm, locked_llm), // Web3_Test1
-			(AccountId::from_ss58check("5EqhBxsfDdbddFxcdRPhDBx8V3N2QyQspV5FNfQeT8nFQtj8").unwrap(), total_llm, locked_llm), // Web3_Test2
-			(AccountId::from_ss58check("5CkYuVwK6bRjjaqam76VkPG4xXb1TsmbSQzWrMwaFnQ1nu6z").unwrap(), total_llm, locked_llm), // Web3_Test3
+			(
+				AccountId::from_ss58check("5G3uZjEpvNAQ6U2eUjnMb66B8g6d8wyB68x6CfkRPNcno8eR")
+					.unwrap(),
+				total_llm,
+				locked_llm,
+			), // Citizen1
+			(
+				AccountId::from_ss58check("5GGgzku3kHSnAjxk7HBNeYzghSLsQQQGGznZA7u3h6wZUseo")
+					.unwrap(),
+				total_llm,
+				locked_llm,
+			), // Dorian
+			(
+				AccountId::from_ss58check("5GZXCJvjfniCCLmKiyqzXLdwgcSgiQNUtsuFVhrpvfjopShL")
+					.unwrap(),
+				total_llm,
+				locked_llm,
+			), // Laissez sudo
+			(
+				AccountId::from_ss58check("5GjYePC6HKJGGnEzEZzSvimy6uctuMat4Kr2tjACtKyY9nhT")
+					.unwrap(),
+				total_llm,
+				locked_llm,
+			), // Web3_Test1
+			(
+				AccountId::from_ss58check("5EqhBxsfDdbddFxcdRPhDBx8V3N2QyQspV5FNfQeT8nFQtj8")
+					.unwrap(),
+				total_llm,
+				locked_llm,
+			), // Web3_Test2
+			(
+				AccountId::from_ss58check("5CkYuVwK6bRjjaqam76VkPG4xXb1TsmbSQzWrMwaFnQ1nu6z")
+					.unwrap(),
+				total_llm,
+				locked_llm,
+			), // Web3_Test3
 		],
 		None,
 		Some(alice.clone()),
@@ -518,7 +580,11 @@ fn local_testnet_genesis() -> RuntimeGenesisConfig {
 	let total_llm = 6000 * GRAINS_IN_LLM;
 	let locked_llm = 5000 * GRAINS_IN_LLM;
 	testnet_genesis(
-		vec![authority_keys_from_seed("Alice"), authority_keys_from_seed("Bob"), authority_keys_from_seed("Charlie")],
+		vec![
+			authority_keys_from_seed("Alice"),
+			authority_keys_from_seed("Bob"),
+			authority_keys_from_seed("Charlie"),
+		],
 		vec![],
 		get_account_id_from_seed::<sr25519::Public>("Alice"),
 		None,

@@ -28,21 +28,19 @@ use frame_support::{
 	assert_noop, assert_ok, ord_parameter_types, parameter_types,
 	traits::{
 		AsEnsureOriginWithArg, ConstU32, ConstU64, Contains, EitherOfDiverse, EqualPrivilegeOnly,
-		OnInitialize, SortedMembers, Everything,
+		Everything, OnInitialize, SortedMembers,
 	},
 	weights::Weight,
 	PalletId,
 };
 use frame_system::{EnsureRoot, EnsureSigned, EnsureSignedBy};
+use pallet_asset_conversion::{NativeOrAssetId, NativeOrAssetIdConverter};
 use sp_core::H256;
 use sp_runtime::{
 	testing::TestSignature,
 	traits::{BadOrigin, BlakeTwo256, Hash, IdentityLookup},
-	BuildStorage,
-	Perbill,
-	Permill,
+	BuildStorage, Perbill, Permill,
 };
-use pallet_asset_conversion::{NativeOrAssetId, NativeOrAssetIdConverter};
 
 mod cancellation;
 mod decoders;
@@ -368,7 +366,8 @@ impl Config for Test {
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut t = frame_system::GenesisConfig::<Test>::default().build_storage().unwrap();
 	let balances = vec![(1, 100), (2, 200), (3, 300), (4, 400), (5, 500), (6, 600)];
-	let mut llm_balances: Vec<(u64, u64, u64)> = balances.iter().map(|(id, _)| (*id, 6000, 5000)).collect();
+	let mut llm_balances: Vec<(u64, u64, u64)> =
+		balances.iter().map(|(id, _)| (*id, 6000, 5000)).collect();
 	llm_balances.push((7, 1000, 1000));
 
 	pallet_balances::GenesisConfig::<Test> { balances: balances.clone() }

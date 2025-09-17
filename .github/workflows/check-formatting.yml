@@ -13,6 +13,8 @@ jobs:
   fmt:
     runs-on: ubuntu-latest
     env:
+      # rustup toolchain used for code formatting (same as upstream release-polkadot-v1.1.0)
+      RUSTUP_TOOLCHAIN: "nightly-2023-05-23" # cargo 1.71.0-nightly (09276c703 2023-05-16)
       RUSTFLAGS: "-C debug-assertions=y"
       RUST_BACKTRACE: 1
     steps:
@@ -23,6 +25,9 @@ jobs:
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y build-essential git clang curl libssl-dev llvm libudev-dev make protobuf-compiler pkg-config git-restore-mtime
+
+      - name: Install rustfmt
+        run: rustup component add --toolchain $RUSTUP_TOOLCHAIN rustfmt
 
       - name: Checkout
         uses: actions/checkout@v2
@@ -48,9 +53,5 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-rust-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Format code with rustfmt
-        run: cargo fmt --check -p pallet-liberland-initializer -p pallet-liberland-legislation -p liberland-traits -p pallet-llm -p pallet-office -p pallet-registry -p pallet-custom-account -p pallet-contracts-registry -p liberland-extension -p liberland-extension-runtime
-
-      - name: Format code with rustfmt
-        working-directory: contracts/
+      - name: Check code formatting
         run: cargo fmt --check

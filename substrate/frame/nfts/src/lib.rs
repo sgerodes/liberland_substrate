@@ -15,7 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// File has been modified by Liberland in 2023. All modifications by Liberland are distributed under the MIT license.
+// File has been modified by Liberland in 2023. All modifications by Liberland are distributed under
+// the MIT license.
 
 // You should have received a copy of the MIT license along with this program. If not, see https://opensource.org/licenses/MIT
 
@@ -50,8 +51,8 @@ mod impl_nonfungibles;
 mod types;
 
 pub mod macros;
-pub mod weights;
 pub mod traits;
+pub mod weights;
 
 use codec::{Decode, Encode};
 use frame_support::traits::{
@@ -226,7 +227,8 @@ pub mod pallet {
 		type MetadataValidator: traits::MetadataValidator<
 			Self::CollectionId,
 			Self::ItemId,
-			Self::StringLimit>;
+			Self::StringLimit,
+		>;
 	}
 
 	/// Details of a collection.
@@ -1932,9 +1934,9 @@ pub mod pallet {
 		///
 		/// - `collection`: The collection to set requirement for
 		/// - `citizenship_required`: If true, only citizens will be able to receive items.
-		/// 
+		///
 		/// Note that this doesn't affect current owners.
-		/// 
+		///
 		/// Added by Liberland
 		#[pallet::call_index(99)]
 		#[pallet::weight(T::WeightInfo::claim_swap())]
@@ -1946,11 +1948,7 @@ pub mod pallet {
 			let maybe_check_owner = T::ForceOrigin::try_origin(origin)
 				.map(|_| None)
 				.or_else(|origin| ensure_signed(origin).map(Some).map_err(DispatchError::from))?;
-			Self::do_set_citizenship_required(
-				collection,
-				citizenship_required,
-				maybe_check_owner,
-			)
+			Self::do_set_citizenship_required(collection, citizenship_required, maybe_check_owner)
 		}
 	}
 }

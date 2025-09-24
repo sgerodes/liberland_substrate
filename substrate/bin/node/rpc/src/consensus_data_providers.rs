@@ -5,8 +5,8 @@ use sp_runtime::{traits::Block as BlockT, DigestItem};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("BABE inherent data missing")]
-    MissingInherent,
+	#[error("BABE inherent data missing")]
+	MissingInherent,
 }
 
 impl From<Error> for sp_inherents::Error {
@@ -32,7 +32,9 @@ where
 		_parent: &<B as BlockT>::Header,
 		data: &sp_inherents::InherentData,
 	) -> Result<sp_runtime::Digest, sp_inherents::Error> {
-		let slot = data.babe_inherent_data()?.ok_or(sp_inherents::Error::Application(Box::new(Error::MissingInherent)))?;
+		let slot = data
+			.babe_inherent_data()?
+			.ok_or(sp_inherents::Error::Application(Box::new(Error::MissingInherent)))?;
 
 		let predigest =
 			PreDigest::SecondaryPlain(SecondaryPlainPreDigest { slot, authority_index: 0 });

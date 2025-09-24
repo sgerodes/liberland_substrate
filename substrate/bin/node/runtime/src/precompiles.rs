@@ -19,22 +19,13 @@ where
 		Self(Default::default())
 	}
 	pub fn used_addresses() -> [H160; 8] {
-		[
-			hash(1),
-			hash(2),
-			hash(3),
-			hash(4),
-			hash(5),
-			hash(6),
-			hash(1024),
-			hash(1025),
-		]
+		[hash(1), hash(2), hash(3), hash(4), hash(5), hash(6), hash(1024), hash(1025)]
 	}
 }
 impl<R> PrecompileSet for FrontierPrecompiles<R>
 where
 	R: pallet_evm::Config,
-	Dispatch<R>: Precompile
+	Dispatch<R>: Precompile,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<PrecompileResult> {
 		match handle.code_address() {

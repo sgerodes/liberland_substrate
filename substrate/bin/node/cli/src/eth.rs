@@ -19,8 +19,10 @@ pub use fc_rpc_core::types::{FeeHistoryCache, FeeHistoryCacheLimit, FilterPool};
 // Local
 use node_primitives::Block;
 
-use crate::cli::EthConfiguration;
-use crate::service::{FullBackend, FullClient};
+use crate::{
+	cli::EthConfiguration,
+	service::{FullBackend, FullClient},
+};
 
 /// Frontier DB backend type.
 pub type FrontierBackend = fc_db::Backend<Block>;

@@ -20,10 +20,10 @@
 
 //! Service implementation. Specialized wrapper over substrate service.
 
-use crate::eth::{
-	db_config_dir, new_frontier_partial, spawn_frontier_tasks, FrontierPartialComponents,
+use crate::{
+	eth::{db_config_dir, new_frontier_partial, spawn_frontier_tasks, FrontierPartialComponents},
+	Cli, EthConfiguration,
 };
-use crate::{Cli, EthConfiguration};
 use codec::Encode;
 use frame_benchmarking_cli::SUBSTRATE_REFERENCE_HARDWARE;
 use frame_system_rpc_runtime_api::AccountNonceApi;
@@ -352,8 +352,9 @@ pub fn new_full_base(
 
 	// Sinks for pubsub notifications.
 	// Everytime a new subscription is created, a new mpsc channel is added to the sink pool.
-	// The MappingSyncWorker sends through the channel on block import and the subscription emits a notification to the subscriber on receiving a message through this channel.
-	// This way we avoid race conditions when using native substrate block import notification stream.
+	// The MappingSyncWorker sends through the channel on block import and the subscription emits a
+	// notification to the subscriber on receiving a message through this channel. This way we avoid
+	// race conditions when using native substrate block import notification stream.
 	let pubsub_notification_sinks: fc_mapping_sync::EthereumBlockNotificationSinks<
 		fc_mapping_sync::EthereumBlockNotification<Block>,
 	> = Default::default();
@@ -680,8 +681,10 @@ pub fn new_full(config: Configuration, cli: Cli) -> Result<TaskManager, ServiceE
 
 #[cfg(test)]
 mod tests {
-	use crate::cli::EthConfiguration;
-	use crate::service::{new_full_base, NewFullBase};
+	use crate::{
+		cli::EthConfiguration,
+		service::{new_full_base, NewFullBase},
+	};
 	use codec::Encode;
 	use kitchensink_runtime::{
 		constants::{currency::CENTS, time::SLOT_DURATION},
@@ -808,7 +811,7 @@ mod tests {
 						sc_consensus_babe::authorship::claim_slot(slot.into(), &epoch, &keystore)
 							.map(|(digest, _)| digest)
 					{
-						break (babe_pre_digest, epoch_descriptor);
+						break (babe_pre_digest, epoch_descriptor)
 					}
 
 					slot += 1;

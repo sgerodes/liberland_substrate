@@ -35,7 +35,11 @@ use std::sync::Arc;
 
 use jsonrpsee::RpcModule;
 use node_primitives::{AccountId, Balance, Block, BlockNumber, Hash, Nonce};
-use sc_client_api::{AuxStore, UsageProvider, backend::{Backend, StorageProvider}, client::BlockchainEvents};
+use sc_client_api::{
+	backend::{Backend, StorageProvider},
+	client::BlockchainEvents,
+	AuxStore, UsageProvider,
+};
 use sc_consensus_babe::BabeWorkerHandle;
 use sc_consensus_grandpa::{
 	FinalityProofProvider, GrandpaJustificationStream, SharedAuthoritySet, SharedVoterState,
@@ -108,12 +112,12 @@ pub struct DefaultEthConfig<C, BE>(std::marker::PhantomData<(C, BE)>);
 
 impl<C, BE> fc_rpc::EthConfig<Block, C> for DefaultEthConfig<C, BE>
 where
-    C: StorageProvider<Block, BE> + Sync + Send + 'static,
-    BE: Backend<Block> + 'static,
+	C: StorageProvider<Block, BE> + Sync + Send + 'static,
+	BE: Backend<Block> + 'static,
 {
-    type EstimateGasAdapter = ();
-    type RuntimeStorageOverride =
-        fc_rpc::frontier_backend_client::SystemAccountId20StorageOverride<Block, C, BE>;
+	type EstimateGasAdapter = ();
+	type RuntimeStorageOverride =
+		fc_rpc::frontier_backend_client::SystemAccountId20StorageOverride<Block, C, BE>;
 }
 
 /// Instantiate all Full RPC extensions.
@@ -129,12 +133,12 @@ pub fn create_full<C, P, SC, B, A, CT, CIDP>(
 		backend,
 		eth,
 	}: FullDeps<C, P, SC, B, A, CT, CIDP>,
-    subscription_task_executor: SubscriptionTaskExecutor,
-    pubsub_notification_sinks: Arc<
-        fc_mapping_sync::EthereumBlockNotificationSinks<
-            fc_mapping_sync::EthereumBlockNotification<Block>,
-        >,
-    >,
+	subscription_task_executor: SubscriptionTaskExecutor,
+	pubsub_notification_sinks: Arc<
+		fc_mapping_sync::EthereumBlockNotificationSinks<
+			fc_mapping_sync::EthereumBlockNotification<Block>,
+		>,
+	>,
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
 	C: ProvideRuntimeApi<Block>
@@ -146,7 +150,7 @@ where
 		+ Sync
 		+ Send
 		+ 'static,
-    C: BlockchainEvents<Block> + UsageProvider<Block> + StorageProvider<Block, B>,
+	C: BlockchainEvents<Block> + UsageProvider<Block> + StorageProvider<Block, B>,
 	C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>,
 	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
 	C::Api: BabeApi<Block>,
@@ -159,7 +163,7 @@ where
 	B::State: sc_client_api::backend::StateBackend<sp_runtime::traits::HashingFor<Block>>,
 	A: ChainApi<Block = Block> + 'static,
 	CIDP: CreateInherentDataProviders<Block, ()> + Send + 'static,
-    CT: fp_rpc::ConvertTransaction<<Block as BlockT>::Extrinsic> + Send + Sync + 'static,
+	CT: fp_rpc::ConvertTransaction<<Block as BlockT>::Extrinsic> + Send + Sync + 'static,
 {
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
 	use sc_consensus_babe_rpc::{Babe, BabeApiServer};

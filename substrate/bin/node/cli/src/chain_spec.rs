@@ -52,8 +52,7 @@ use sp_runtime::{
 	traits::{AccountIdConversion, IdentifyAccount, Verify},
 	Perbill,
 };
-use std::collections::BTreeMap;
-use std::str::FromStr;
+use std::{collections::BTreeMap, str::FromStr};
 
 pub use kitchensink_runtime::RuntimeGenesisConfig;
 pub use node_primitives::{AccountId, Balance, Signature};
@@ -647,8 +646,10 @@ pub fn local_testnet_config() -> ChainSpec {
 #[cfg(test)]
 pub(crate) mod tests {
 	use super::*;
-	use crate::cli::EthConfiguration;
-	use crate::service::{new_full_base, NewFullBase};
+	use crate::{
+		cli::EthConfiguration,
+		service::{new_full_base, NewFullBase},
+	};
 	use sc_service_test;
 	use sp_runtime::BuildStorage;
 

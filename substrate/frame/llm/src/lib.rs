@@ -621,7 +621,7 @@ pub mod pallet {
 		fn maybe_release(block: BlockNumberFor<T>) -> DispatchResult {
 			let next_release = LastRelease::<T>::get() + T::InflationEventInterval::get();
 			if block < next_release {
-				return Ok(());
+				return Ok(())
 			}
 
 			LastRelease::<T>::put(next_release);
@@ -658,7 +658,7 @@ pub mod pallet {
 			if Electionlock::<T>::contains_key(account) {
 				let current_block_number = frame_system::Pallet::<T>::block_number();
 				let unlocked_on_block = Electionlock::<T>::get(account);
-				return current_block_number > unlocked_on_block;
+				return current_block_number > unlocked_on_block
 			}
 			true
 		}
@@ -745,7 +745,7 @@ pub mod pallet {
 	impl<T: Config> CitizenshipChecker<T::AccountId> for Pallet<T> {
 		fn ensure_stocks_allowed(account: &T::AccountId) -> Result<(), DispatchError> {
 			if Self::is_dex_pool(account) {
-				return Ok(());
+				return Ok(())
 			}
 
 			let identity =
@@ -795,9 +795,9 @@ pub mod pallet {
 			identity
 				.as_ref()
 				.map(|identity| {
-					Self::is_citizen_identity(identity)
-						&& Self::is_known_good(identity)
-						&& Self::is_eligible_identity(identity)
+					Self::is_citizen_identity(identity) &&
+						Self::is_known_good(identity) &&
+						Self::is_eligible_identity(identity)
 				})
 				.unwrap_or(false)
 		}

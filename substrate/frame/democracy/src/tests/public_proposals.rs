@@ -15,7 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under the MIT license.
+// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under
+// the MIT license.
 
 // You should have received a copy of the MIT license along with this program. If not, see https://opensource.org/licenses/MIT
 
@@ -74,9 +75,9 @@ fn proposal_with_funds_below_save_value_should_not_work() {
 		Balances::make_free_balance_be(&1, 0);
 
 		assert_noop!(
-			propose_set_balance(1, 2, 0), 
+			propose_set_balance(1, 2, 0),
 			pallet_balances::Error::<Test, _>::InsufficientBalance,
-	);
+		);
 	});
 }
 
@@ -86,11 +87,11 @@ fn proposal_with_funds_below_minimum_should_not_work() {
 		assert_ok!(propose_set_balance(1, 2, 5));
 
 		Balances::make_free_balance_be(&1, 10);
-		
+
 		assert_noop!(
-			propose_set_balance(1, 2, 0), 
+			propose_set_balance(1, 2, 0),
 			pallet_balances::pallet::Error::<Test>::Expendability
-	);
+		);
 	});
 }
 
@@ -103,7 +104,6 @@ fn creating_proposal_takes_fee() {
 		assert_ok!(propose_set_balance(1, 2, 5));
 
 		assert_eq!(Balances::total_balance(&1), 90);
-		
 	});
 }
 

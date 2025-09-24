@@ -471,7 +471,7 @@ pub mod pallet {
 					T::Currency::unreserve_named(T::ReserveIdentifier::get(), &owner, deposit);
 				}
 			} else {
-				return Err(Error::<T, I>::InvalidEntity.into());
+				return Err(Error::<T, I>::InvalidEntity.into())
 			}
 			Requests::<T, I>::remove(&registry_index, &entity_id);
 
@@ -484,7 +484,8 @@ pub mod pallet {
 		///
 		/// * `registry_index` - Registry index to remove from
 		/// * `entity_id` - AccountId of entity to unregister
-		/// * `soft` - Boolean information should we accept delete request or hard unregister Registries
+		/// * `soft` - Boolean information should we accept delete request or hard unregister
+		///   Registries
 		///
 		/// Will refund deposit of stored data.
 		///
@@ -510,14 +511,14 @@ pub mod pallet {
 				let owner = Self::entity_owner(&entity_id).ok_or(Error::<T, I>::InvalidEntity)?;
 				T::Currency::unreserve_named(T::ReserveIdentifier::get(), &owner, deposit);
 			} else {
-				return Err(Error::<T, I>::InvalidEntity.into());
+				return Err(Error::<T, I>::InvalidEntity.into())
 			}
 
 			if soft {
 				if let Some(None) = Self::requests(registry_index, &entity_id) {
 					Requests::<T, I>::remove(registry_index, &entity_id);
 				} else {
-					return Err(Error::<T, I>::NotRequestedToUnregister.into());
+					return Err(Error::<T, I>::NotRequestedToUnregister.into())
 				}
 			}
 
@@ -644,7 +645,7 @@ pub mod pallet {
 				T::Currency::unreserve_named(T::ReserveIdentifier::get(), &sender, req.deposit);
 			}
 			if Self::registries(&registry_index, entity_id.clone()).is_none() {
-				return Err(Error::<T, I>::InvalidEntity.into());
+				return Err(Error::<T, I>::InvalidEntity.into())
 			}
 
 			Requests::<T, I>::insert(&registry_index, &entity_id, None::<RequestOf<T, I>>);

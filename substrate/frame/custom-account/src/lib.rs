@@ -40,8 +40,7 @@ pub mod weights;
 use weights::WeightInfo;
 
 use codec::MaxEncodedLen;
-use frame_support::traits::Currency;
-use frame_support::traits::Imbalance;
+use frame_support::traits::{Currency, Imbalance};
 
 type NegativeImbalanceOf<T, I> = <<T as Config<I>>::Currency as Currency<
 	<T as frame_system::Config>::AccountId,

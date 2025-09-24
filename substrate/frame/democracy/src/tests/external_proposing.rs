@@ -15,7 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under the MIT license.
+// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under
+// the MIT license.
 
 // You should have received a copy of the MIT license along with this program. If not, see https://opensource.org/licenses/MIT
 
@@ -113,7 +114,7 @@ fn external_referendum_works() {
 			Ok(ReferendumStatus {
 				end: 4,
 				proposal: set_balance_proposal(2),
-				dispatch_origin: DispatchOrigin::Root, 
+				dispatch_origin: DispatchOrigin::Root,
 				threshold: VoteThreshold::SuperMajorityApprove,
 				delay: 2,
 				tally: Tally { ayes: 0, nays: 0, aye_voters: 00000, nay_voters: 00000, turnout: 0 },
@@ -140,7 +141,7 @@ fn external_majority_referendum_works() {
 			Ok(ReferendumStatus {
 				end: 4,
 				proposal: set_balance_proposal(2),
-				dispatch_origin: DispatchOrigin::Root, 
+				dispatch_origin: DispatchOrigin::Root,
 				threshold: VoteThreshold::SimpleMajority,
 				delay: 2,
 				tally: Tally { ayes: 0, nays: 0, aye_voters: 00000, nay_voters: 00000, turnout: 0 },
@@ -167,7 +168,7 @@ fn external_default_referendum_works() {
 			Ok(ReferendumStatus {
 				end: 4,
 				proposal: set_balance_proposal(2),
-				dispatch_origin: DispatchOrigin::Root, 
+				dispatch_origin: DispatchOrigin::Root,
 				threshold: VoteThreshold::SuperMajorityAgainst,
 				delay: 2,
 				tally: Tally { ayes: 0, nays: 0, aye_voters: 00000, nay_voters: 00000, turnout: 0 },
@@ -191,7 +192,7 @@ fn external_and_public_interleaving_works() {
 			Ok(ReferendumStatus {
 				end: 4,
 				proposal: set_balance_proposal(2),
-				dispatch_origin: DispatchOrigin::Root, 
+				dispatch_origin: DispatchOrigin::Root,
 				threshold: VoteThreshold::SuperMajorityApprove,
 				delay: 2,
 				tally: Tally { ayes: 0, nays: 0, aye_voters: 00000, nay_voters: 00000, turnout: 0 },
@@ -202,7 +203,7 @@ fn external_and_public_interleaving_works() {
 			Ok(ReferendumStatus {
 				end: 4,
 				proposal: set_balance_proposal(1),
-				dispatch_origin: DispatchOrigin::Root, 
+				dispatch_origin: DispatchOrigin::Root,
 				threshold: VoteThreshold::SuperMajorityApprove,
 				delay: 2,
 				tally: Tally { ayes: 0, nays: 0, aye_voters: 00000, nay_voters: 00000, turnout: 0 },

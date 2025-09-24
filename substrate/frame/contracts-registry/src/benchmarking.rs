@@ -2,8 +2,10 @@
 
 use super::*;
 
-use frame_benchmarking::v1::{account, BenchmarkError};
-use frame_benchmarking::{benchmarks_instance_pallet, impl_benchmark_test_suite};
+use frame_benchmarking::{
+	benchmarks_instance_pallet, impl_benchmark_test_suite,
+	v1::{account, BenchmarkError},
+};
 use frame_support::{
 	assert_ok, ensure,
 	traits::{EnsureOrigin, Get},

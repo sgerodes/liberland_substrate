@@ -15,7 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// File has been modified by Liberland in 2023. All modifications by Liberland are distributed under the MIT license.
+// File has been modified by Liberland in 2023. All modifications by Liberland are distributed under
+// the MIT license.
 
 // You should have received a copy of the MIT license along with this program. If not, see https://opensource.org/licenses/MIT
 
@@ -6140,20 +6141,14 @@ mod staking_interface {
 			start_session(2);
 			assert_eq!(Balances::free_balance(2), 2000);
 			assert_eq!(Balances::free_balance(3), 2000);
-			assert_eq!(
-				Staking::ledger(&3),
-				None
-			);
+			assert_eq!(Staking::ledger(&3), None);
 
 			assert_ok!(Staking::bond_to(RuntimeOrigin::signed(2), 3, 1500));
-			
+
 			assert_eq!(Balances::free_balance(2), 500);
 			assert_eq!(Balances::free_balance(3), 3500);
 
-			assert_eq!(
-				Staking::ledger(&2),
-				None
-			);
+			assert_eq!(Staking::ledger(&2), None);
 			assert_eq!(
 				Staking::ledger(&3),
 				Some(StakingLedger {
@@ -6180,20 +6175,14 @@ mod staking_interface {
 
 			assert_eq!(Balances::free_balance(2), 2000);
 			assert_eq!(Balances::free_balance(3), 2000);
-			assert_eq!(
-				Staking::ledger(&3),
-				None
-			);
+			assert_eq!(Staking::ledger(&3), None);
 
 			assert_ok!(Staking::bond_to(RuntimeOrigin::signed(2), 3, 1500));
-			
+
 			assert_eq!(Balances::free_balance(2), 500);
 			assert_eq!(Balances::free_balance(3), 3500);
 
-			assert_eq!(
-				Staking::ledger(&2),
-				None
-			);
+			assert_eq!(Staking::ledger(&2), None);
 			assert_eq!(
 				Staking::ledger(&3),
 				Some(StakingLedger {
@@ -6204,19 +6193,16 @@ mod staking_interface {
 					claimed_rewards: bounded_vec![0],
 				})
 			);
-			
+
 			assert_eq!(Balances::free_balance(2), 500);
 			assert_eq!(Balances::free_balance(3), 3500);
 
 			assert_ok!(Staking::bond_to(RuntimeOrigin::signed(2), 3, 300));
-			
+
 			assert_eq!(Balances::free_balance(2), 200);
 			assert_eq!(Balances::free_balance(3), 3800);
 
-			assert_eq!(
-				Staking::ledger(&2),
-				None
-			);
+			assert_eq!(Staking::ledger(&2), None);
 			assert_eq!(
 				Staking::ledger(&3),
 				Some(StakingLedger {
@@ -6243,20 +6229,14 @@ mod staking_interface {
 
 			assert_eq!(Balances::free_balance(2), 2000);
 			assert_eq!(Balances::free_balance(3), 2000);
-			assert_eq!(
-				Staking::ledger(&3),
-				None
-			);
+			assert_eq!(Staking::ledger(&3), None);
 
 			assert_ok!(Staking::bond_to(RuntimeOrigin::signed(2), 3, 1500));
-			
+
 			assert_eq!(Balances::free_balance(2), 500);
 			assert_eq!(Balances::free_balance(3), 3500);
 
-			assert_eq!(
-				Staking::ledger(&2),
-				None
-			);
+			assert_eq!(Staking::ledger(&2), None);
 			assert_eq!(
 				Staking::ledger(&3),
 				Some(StakingLedger {
@@ -6267,21 +6247,18 @@ mod staking_interface {
 					claimed_rewards: bounded_vec![0],
 				})
 			);
-		
+
 			assert_eq!(*staking_events().last().unwrap(), Event::Bonded { stash: 3, amount: 1500 });
 
 			assert_eq!(Balances::free_balance(2), 500);
 			assert_eq!(Balances::free_balance(3), 3500);
 
 			assert_ok!(Staking::bond_to(RuntimeOrigin::signed(2), 3, 300));
-			
+
 			assert_eq!(Balances::free_balance(2), 200);
 			assert_eq!(Balances::free_balance(3), 3800);
 
-			assert_eq!(
-				Staking::ledger(&2),
-				None
-			);
+			assert_eq!(Staking::ledger(&2), None);
 			assert_eq!(
 				Staking::ledger(&3),
 				Some(StakingLedger {
@@ -6297,7 +6274,7 @@ mod staking_interface {
 		});
 	}
 
-		#[test]
+	#[test]
 	fn bond_to_transfer_failed() {
 		ExtBuilder::default().nominate(false).build_and_execute(|| {
 			// put some money in account that we'll use.
@@ -6310,12 +6287,12 @@ mod staking_interface {
 
 			assert_eq!(Balances::free_balance(2), 2000);
 			assert_eq!(Balances::free_balance(3), 2000);
-			assert_eq!(
-				Staking::ledger(&3),
-				None
-			);
+			assert_eq!(Staking::ledger(&3), None);
 
-			assert_noop!(Staking::bond_to(RuntimeOrigin::signed(2), 3, 4000), Error::<Test>::TransferFailed);
+			assert_noop!(
+				Staking::bond_to(RuntimeOrigin::signed(2), 3, 4000),
+				Error::<Test>::TransferFailed
+			);
 		});
 	}
 }

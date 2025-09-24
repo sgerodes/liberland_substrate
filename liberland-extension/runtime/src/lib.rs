@@ -61,7 +61,7 @@ where
 			1 => self.llm_force_transfer::<E>(env),
 			_ => {
 				error!("Called an unregistered `func_id`: {:}", func_id);
-				return Err(DispatchError::Other("Unimplemented func_id"));
+				return Err(DispatchError::Other("Unimplemented func_id"))
 			},
 		}
 	}

@@ -1,12 +1,10 @@
 #![cfg(test)]
 
-use frame_support::traits::Currency;
-use frame_support::{assert_noop, assert_ok};
+use frame_support::{assert_noop, assert_ok, traits::Currency};
 use frame_system::RawOrigin;
 use sp_std::prelude::*;
 
-use crate::{mock::*, Error};
-use crate::{Contracts, Event, Judges};
+use crate::{mock::*, Contracts, Error, Event, Judges};
 
 #[test]
 fn anyone_can_create_contract() {

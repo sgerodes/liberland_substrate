@@ -15,7 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under the MIT license.
+// File has been modified by Liberland in 2022. All modifications by Liberland are distributed under
+// the MIT license.
 
 // You should have received a copy of the MIT license along with this program. If not, see https://opensource.org/licenses/MIT
 
@@ -53,7 +54,10 @@ fn lock_voting_should_work() {
 		assert_ok!(Democracy::vote(RuntimeOrigin::signed(3), r, aye(3, 3000)));
 		assert_ok!(Democracy::vote(RuntimeOrigin::signed(4), r, aye(2, 4000)));
 		assert_ok!(Democracy::vote(RuntimeOrigin::signed(5), r, nay(1, 5000)));
-		assert_eq!(tally(r), Tally { ayes: 9000, nays: 6000, turnout: 15000, aye_voters: 30000, nay_voters: 20000 });
+		assert_eq!(
+			tally(r),
+			Tally { ayes: 9000, nays: 6000, turnout: 15000, aye_voters: 30000, nay_voters: 20000 }
+		);
 
 		// Liberland specific - voting shouldn't lock balances
 		for i in 1..=5 {
@@ -159,7 +163,10 @@ fn lock_voting_should_work_with_delegation() {
 		assert_ok!(Democracy::delegate(RuntimeOrigin::signed(4), 2, Conviction::Locked2x, 4000));
 		assert_ok!(Democracy::vote(RuntimeOrigin::signed(5), r, nay(1, 5000)));
 
-		assert_eq!(tally(r), Tally { ayes: 9000, nays: 6000, turnout: 15000, aye_voters: 30000, nay_voters: 20000 });
+		assert_eq!(
+			tally(r),
+			Tally { ayes: 9000, nays: 6000, turnout: 15000, aye_voters: 30000, nay_voters: 20000 }
+		);
 
 		next_block();
 		next_block();
@@ -170,16 +177,31 @@ fn lock_voting_should_work_with_delegation() {
 
 fn setup_three_referenda() -> (u32, u32, u32) {
 	System::set_block_number(0);
-	let r1 =
-		Democracy::inject_referendum(2, set_balance_proposal(2), DispatchOrigin::Root, VoteThreshold::SimpleMajority, 0);
+	let r1 = Democracy::inject_referendum(
+		2,
+		set_balance_proposal(2),
+		DispatchOrigin::Root,
+		VoteThreshold::SimpleMajority,
+		0,
+	);
 	assert_ok!(Democracy::vote(RuntimeOrigin::signed(5), r1, aye(4, 10)));
 
-	let r2 =
-		Democracy::inject_referendum(2, set_balance_proposal(2), DispatchOrigin::Root, VoteThreshold::SimpleMajority, 0);
+	let r2 = Democracy::inject_referendum(
+		2,
+		set_balance_proposal(2),
+		DispatchOrigin::Root,
+		VoteThreshold::SimpleMajority,
+		0,
+	);
 	assert_ok!(Democracy::vote(RuntimeOrigin::signed(5), r2, aye(3, 20)));
 
-	let r3 =
-		Democracy::inject_referendum(2, set_balance_proposal(2), DispatchOrigin::Root, VoteThreshold::SimpleMajority, 0);
+	let r3 = Democracy::inject_referendum(
+		2,
+		set_balance_proposal(2),
+		DispatchOrigin::Root,
+		VoteThreshold::SimpleMajority,
+		0,
+	);
 	assert_ok!(Democracy::vote(RuntimeOrigin::signed(5), r3, aye(2, 50)));
 
 	fast_forward_to(2);
@@ -301,7 +323,7 @@ fn locks_should_persist_from_voting_to_delegation() {
 		let r = Democracy::inject_referendum(
 			2,
 			set_balance_proposal(2),
-			DispatchOrigin::Root, 
+			DispatchOrigin::Root,
 			VoteThreshold::SimpleMajority,
 			0,
 		);

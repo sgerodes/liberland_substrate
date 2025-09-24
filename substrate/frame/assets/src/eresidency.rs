@@ -9,31 +9,31 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 */
 
 use crate::*;
-use sp_runtime::DispatchResult;
-use liberland_traits::CitizenshipChecker;
 use frame_support::ensure;
+use liberland_traits::CitizenshipChecker;
+use sp_runtime::DispatchResult;
 
 impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	pub fn do_set_parameters(
 		asset: T::AssetId,
-        parameters: AssetParameters,
+		parameters: AssetParameters,
 		maybe_check_owner: Option<T::AccountId>,
 	) -> DispatchResult {
-        if let Some(check_owner) = maybe_check_owner {
-            let d = Asset::<T, I>::get(&asset).ok_or(Error::<T, I>::Unknown)?;
-            ensure!(d.owner == check_owner, Error::<T, I>::NoPermission);
-        }
+		if let Some(check_owner) = maybe_check_owner {
+			let d = Asset::<T, I>::get(&asset).ok_or(Error::<T, I>::Unknown)?;
+			ensure!(d.owner == check_owner, Error::<T, I>::NoPermission);
+		}
 
-        Parameters::<T, I>::insert(&asset, parameters);
+		Parameters::<T, I>::insert(&asset, parameters);
 		Self::deposit_event(Event::ParametersSet { asset_id: asset, parameters });
-        Ok(())
+		Ok(())
 	}
 
-    pub fn maybe_ensure_eresidency(asset: T::AssetId, who: &T::AccountId) -> DispatchResult {
-        let AssetParameters { eresidency_required } = Parameters::<T, I>::get(asset);
-        if eresidency_required {
-            T::Citizenship::ensure_stocks_allowed(who)?
-        }
-        Ok(())
-    }
+	pub fn maybe_ensure_eresidency(asset: T::AssetId, who: &T::AccountId) -> DispatchResult {
+		let AssetParameters { eresidency_required } = Parameters::<T, I>::get(asset);
+		if eresidency_required {
+			T::Citizenship::ensure_stocks_allowed(who)?
+		}
+		Ok(())
+	}
 }

@@ -87,7 +87,7 @@ pub mod v2 {
 					"skipping on_runtime_upgrade: executed on wrong storage version.\
 				Expected version 1"
 				);
-				return weight;
+				return weight
 			}
 
 			let _ = v1::JudgesSignatures::<T>::clear(u32::MAX, None);

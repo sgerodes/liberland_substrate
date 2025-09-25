@@ -1,0 +1,78 @@
+[package]
+name = "pallet-evm"
+version = "6.0.0-dev"
+license = "Apache-2.0"
+readme = "README.md"
+description = "FRAME EVM contracts pallet."
+authors = { workspace = true }
+edition = { workspace = true }
+repository = { workspace = true }
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+environmental = { version = "1.1.4", default-features = false, optional = true }
+evm = { git = "https://github.com/rust-blockchain/evm", rev = "b7b82c7e1fc57b7449d6dfa6826600de37cc1e65", default-features = false, features = ["with-codec"] }
+hash-db = { version = "0.16.0", default-features = false }
+hex = { version = "0.4.3", default-features = false, features = ["alloc"], optional = true }
+hex-literal = "0.4.1"
+impl-trait-for-tuples = "0.2.1"
+log = { version = "0.4.20", default-features = false }
+rlp = { version = "0.5.2", default-features = false, optional = true }
+scale-codec = { package = "parity-scale-codec", version = "3.6.4", default-features = false, features = ["derive"] }
+scale-info = { version = "2.9.0", default-features = false, features = ["derive"] }
+# Substrate
+frame-benchmarking = { default-features = false, branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk", optional = true }
+frame-support = { default-features = false, branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
+frame-system = { default-features = false, branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
+sp-core = { default-features = false, branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
+sp-io = { default-features = false, branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
+sp-runtime = { default-features = false, branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
+sp-std = { default-features = false, branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
+# Frontier
+fp-account = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+fp-evm = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier", features = ["serde"] }
+
+[dev-dependencies]
+hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
+# Substrate
+pallet-balances = { default-features = false, branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk", features = ["default", "insecure_zero_ed"] }
+pallet-evm-precompile-simple = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier", features = ["default"] }
+pallet-timestamp = { default-features = false, branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk", features = ["default"] }
+
+[features]
+default = ["std"]
+std = [
+	"environmental?/std",
+	"evm/std",
+	"evm/with-serde",
+	"hex?/std",
+	"log/std",
+	"rlp?/std",
+	"scale-codec/std",
+	"scale-info/std",
+	# Substrate
+	"frame-benchmarking?/std",
+	"frame-support/std",
+	"frame-system/std",
+	"sp-core/std",
+	"sp-io/std",
+	"sp-runtime/std",
+	"sp-std/std",
+	# Frontier
+	"fp-account/std",
+	"fp-evm/std",
+]
+runtime-benchmarks = [
+	"hex",
+	"rlp",
+	"frame-benchmarking/runtime-benchmarks",
+	"frame-support/runtime-benchmarks",
+	"frame-system/runtime-benchmarks",
+]
+try-runtime = [
+	"frame-support/try-runtime",
+	"frame-system/try-runtime",
+]
+forbid-evm-reentrancy = ["dep:environmental"]

@@ -105,6 +105,19 @@ node-inspect = { optional = true, branch = "release-polkadot-v1.1.0", git = "htt
 try-runtime-cli = { optional = true, branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
 serde_json = "1.0.85"
 
+# Frontier
+fc-api = { branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+fc-db = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+fc-consensus = { branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+fc-mapping-sync = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+fc-rpc = { path = "../../../client/rpc", default-features = false }
+fc-rpc-core = { branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+fc-storage = { branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+
+fp-dynamic-fee = { default-features = false, features = ["default"], branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+fp-evm = { default-features = false, features = ["serde"], branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+fp-rpc = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+
 [dev-dependencies]
 sc-keystore = { branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
 sc-client-db = { branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
@@ -155,6 +168,7 @@ cli = [
 	"substrate-build-script-utils",
 	"substrate-frame-cli",
 	"try-runtime-cli",
+	"fc-db/rocksdb",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking-cli/runtime-benchmarks",

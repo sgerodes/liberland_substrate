@@ -78,7 +78,7 @@ pallet-offences = { default-features = false, branch = "release-polkadot-v1.1.0"
 pallet-offences-benchmarking = { branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk", default-features = false, optional = true }
 pallet-preimage = { default-features = false, branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
 pallet-proxy = { default-features = false, branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
-pallet-session = { features = [ "historical" ], branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk", default-features = false }
+pallet-session = { default-features = false, features = ["historical"], branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
 pallet-session-benchmarking = { branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk", default-features = false, optional = true }
 pallet-staking-reward-curve = { default-features = false, branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
 pallet-scheduler = { default-features = false, branch = "release-polkadot-v1.1.0", git = "https://github.com/paritytech/polkadot-sdk" }
@@ -108,6 +108,23 @@ pallet-office = { path = "../../../frame/office", default-features = false }
 pallet-custom-account = { path = "../../../frame/custom-account", default-features = false }
 pallet-contracts-registry = { path = "../../../frame/contracts-registry", default-features = false }
 liberland-extension-runtime = { path = "../../../../liberland-extension/runtime", default-features = false }
+
+# Frontier
+fp-evm = { default-features = false, features = ["serde"], branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+fp-rpc = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+fp-self-contained = { default-features = false, features = ["serde"], branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+
+# Frontier FRAME
+pallet-base-fee = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+pallet-dynamic-fee = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+pallet-ethereum = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+pallet-evm = { default-features = false, path = "../../../frame/evm" }
+pallet-evm-chain-id = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+pallet-evm-precompile-dispatch = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+pallet-evm-precompile-modexp = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+pallet-evm-precompile-sha3fips = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+pallet-evm-precompile-simple = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
+pallet-hotfix-sufficients = { default-features = false, branch = "polkadot-v1.1.0", git = "https://github.com/polkadot-evm/frontier" }
 
 # Sora Bridge:
 substrate-bridge-app = { git = "https://github.com/sora-xor/sora2-common.git", branch = "liberland", default-features = false }
@@ -202,6 +219,23 @@ std = [
 	"sp-version/std",
 	"substrate-wasm-builder",
 
+	# Frontier
+	"fp-evm/std",
+	"fp-rpc/std",
+	"fp-self-contained/std",
+
+	# Frontier FRAME
+	"pallet-base-fee/std",
+	"pallet-dynamic-fee/std",
+	"pallet-ethereum/std",
+	"pallet-evm/std",
+	"pallet-evm-chain-id/std",
+	"pallet-evm-precompile-dispatch/std",
+	"pallet-evm-precompile-modexp/std",
+	"pallet-evm-precompile-sha3fips/std",
+	"pallet-evm-precompile-simple/std",
+	"pallet-hotfix-sufficients/std",
+
 	# Sora Bridge:
 	"substrate-bridge-app/std",
 	"substrate-bridge-channel/std",
@@ -257,6 +291,11 @@ runtime-benchmarks = [
 	"sp-runtime/runtime-benchmarks",
 	"sp-staking/runtime-benchmarks",
 
+	# Frontier FRAME
+	"pallet-ethereum/runtime-benchmarks",
+	"pallet-evm/runtime-benchmarks",
+	"pallet-hotfix-sufficients/runtime-benchmarks",
+
 	# Sora Bridge
 	"dispatch/runtime-benchmarks",
 	"multisig-verifier/runtime-benchmarks",
@@ -306,6 +345,17 @@ try-runtime = [
 	"pallet-treasury/try-runtime",
 	"pallet-utility/try-runtime",
 	"sp-runtime/try-runtime",
+
+	# Frontier
+	"fp-self-contained/try-runtime",
+
+	# Frontier FRAME
+	"pallet-base-fee/try-runtime",
+	"pallet-dynamic-fee/try-runtime",
+	"pallet-ethereum/try-runtime",
+	"pallet-evm/try-runtime",
+	"pallet-evm-chain-id/try-runtime",
+	"pallet-hotfix-sufficients/try-runtime",
 
 	# Sora Bridge:
 	"substrate-bridge-app/try-runtime",

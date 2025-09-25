@@ -27,14 +27,15 @@ use grandpa_primitives::AuthorityId as GrandpaId;
 use kitchensink_runtime::{
 	constants::{currency::*, llm::*},
 	impls::{IdentityCallFilter, NftsCallFilter, RegistryCallFilter},
+	opaque::SessionKeys,
 	wasm_binary_unwrap, AssetRegistryOfficeConfig, AssetRegistryOfficePalletId, BabeConfig,
 	BalancesConfig, Block, CompanyRegistryConfig, CompanyRegistryOfficeConfig,
-	CompanyRegistryOfficePalletId, CouncilConfig, DemocracyConfig, ElectionsConfig,
-	IdentityOfficeConfig, IdentityOfficePalletId, ImOnlineConfig, LandRegistryOfficeConfig,
-	LandRegistryOfficePalletId, LiberlandInitializerConfig, MaxNominations,
-	MetaverseLandRegistryOfficeConfig, MetaverseLandRegistryOfficePalletId,
-	MinistryOfFinanceOfficeConfig, SenateConfig, SessionConfig, SessionKeys, StakerStatus,
-	StakingConfig, SudoConfig, SystemConfig, TechnicalCommitteeConfig,
+	CompanyRegistryOfficePalletId, CouncilConfig, DemocracyConfig, EVMChainIdConfig, EVMConfig,
+	ElectionsConfig, IdentityOfficeConfig, IdentityOfficePalletId, ImOnlineConfig,
+	LandRegistryOfficeConfig, LandRegistryOfficePalletId, LiberlandInitializerConfig,
+	MaxNominations, MetaverseLandRegistryOfficeConfig, MetaverseLandRegistryOfficePalletId,
+	MinistryOfFinanceOfficeConfig, SenateConfig, SessionConfig, StakerStatus, StakingConfig,
+	SudoConfig, SystemConfig, TechnicalCommitteeConfig,
 };
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use sc_chain_spec::{ChainSpecExtension, Properties};
@@ -45,12 +46,13 @@ use sp_authority_discovery::AuthorityId as AuthorityDiscoveryId;
 use sp_consensus_babe::AuthorityId as BabeId;
 use sp_core::{
 	crypto::{Ss58Codec, UncheckedInto},
-	sr25519, Pair, Public,
+	sr25519, Pair, Public, H160, U256,
 };
 use sp_runtime::{
 	traits::{AccountIdConversion, IdentifyAccount, Verify},
 	Perbill,
 };
+use std::{collections::BTreeMap, str::FromStr};
 
 pub use kitchensink_runtime::RuntimeGenesisConfig;
 pub use node_primitives::{AccountId, Balance, Signature};
@@ -497,6 +499,31 @@ pub fn testnet_genesis(
 		},
 		substrate_bridge_outbound_channel: Default::default(),
 		sora_bridge_app: Default::default(),
+		// Frontier
+		ethereum: Default::default(),
+		evm: EVMConfig {
+			accounts: {
+				let mut map = BTreeMap::new();
+				map.insert(
+					// Address used by pallet-evm benchmarks
+					H160::from_str("100000000000000000000000000000000000000f")
+						.expect("internal H160 is valid; qed"),
+					fp_evm::GenesisAccount {
+						nonce: Default::default(),
+						balance: U256::from_str("0xffffffffffffffffffffffffffffffff")
+							.expect("internal U256 is valid; qed"),
+						storage: Default::default(),
+						code: Default::default(),
+					},
+				);
+
+				map
+			},
+			..Default::default()
+		},
+		evm_chain_id: EVMChainIdConfig { chain_id: 12864, ..Default::default() },
+		base_fee: Default::default(),
+		dynamic_fee: Default::default(),
 	}
 }
 
@@ -619,7 +646,10 @@ pub fn local_testnet_config() -> ChainSpec {
 #[cfg(test)]
 pub(crate) mod tests {
 	use super::*;
-	use crate::service::{new_full_base, NewFullBase};
+	use crate::{
+		cli::EthConfiguration,
+		service::{new_full_base, NewFullBase},
+	};
 	use sc_service_test;
 	use sp_runtime::BuildStorage;
 
@@ -675,8 +705,9 @@ pub(crate) mod tests {
 		sp_tracing::try_init_simple();
 
 		sc_service_test::connectivity(integration_test_config_with_two_authorities(), |config| {
+			let eth_configuration: EthConfiguration = Default::default();
 			let NewFullBase { task_manager, client, network, sync, transaction_pool, .. } =
-				new_full_base(config, false, |_, _| ())?;
+				new_full_base(config, eth_configuration, false, |_, _| ())?;
 			Ok(sc_service_test::TestNetComponents::new(
 				task_manager,
 				client,

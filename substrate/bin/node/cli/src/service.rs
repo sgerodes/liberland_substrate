@@ -20,16 +20,19 @@
 
 //! Service implementation. Specialized wrapper over substrate service.
 
-use crate::Cli;
+use crate::{
+	eth::{db_config_dir, new_frontier_partial, spawn_frontier_tasks, FrontierPartialComponents},
+	Cli, EthConfiguration,
+};
 use codec::Encode;
 use frame_benchmarking_cli::SUBSTRATE_REFERENCE_HARDWARE;
 use frame_system_rpc_runtime_api::AccountNonceApi;
 use futures::prelude::*;
-use kitchensink_runtime::RuntimeApi;
+use kitchensink_runtime::{RuntimeApi, TransactionConverter};
 use node_executor::ExecutorDispatch;
 use node_primitives::Block;
 use sc_client_api::{Backend, BlockBackend};
-use sc_consensus_babe::{self, SlotProportion};
+use sc_consensus_babe::{self, BabeWorkerHandle, SlotProportion};
 use sc_executor::NativeElseWasmExecutor;
 use sc_network::{event::Event, NetworkEventStream, NetworkService};
 use sc_network_sync::{warp::WarpSyncParams, SyncingService};
@@ -37,14 +40,15 @@ use sc_service::{config::Configuration, error::Error as ServiceError, RpcHandler
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use sp_api::ProvideRuntimeApi;
-use sp_core::crypto::Pair;
+use sp_core::{crypto::Pair, U256};
 use sp_runtime::{generic, traits::Block as BlockT, SaturatedConversion};
 use std::sync::Arc;
 
 /// The full client type definition.
 pub type FullClient =
 	sc_service::TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<ExecutorDispatch>>;
-type FullBackend = sc_service::TFullBackend<Block>;
+/// The full backend type definition.
+pub type FullBackend = sc_service::TFullBackend<Block>;
 type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
 type FullGrandpaBlockImport =
 	grandpa::GrandpaBlockImport<FullBackend, Block, FullClient, FullSelectChain>;
@@ -134,6 +138,7 @@ pub fn create_extrinsic(
 /// Creates a new partial node.
 pub fn new_partial(
 	config: &Configuration,
+	eth: &EthConfiguration,
 ) -> Result<
 	sc_service::PartialComponents<
 		FullClient,
@@ -142,16 +147,12 @@ pub fn new_partial(
 		sc_consensus::DefaultImportQueue<Block>,
 		sc_transaction_pool::FullPool<Block, FullClient>,
 		(
-			impl Fn(
-				node_rpc::DenyUnsafe,
-				sc_rpc::SubscriptionTaskExecutor,
-			) -> Result<jsonrpsee::RpcModule<()>, sc_service::Error>,
 			(
 				sc_consensus_babe::BabeBlockImport<Block, FullClient, FullGrandpaBlockImport>,
 				grandpa::LinkHalf<Block, FullClient, FullSelectChain>,
 				sc_consensus_babe::BabeLink<Block>,
 			),
-			grandpa::SharedVoterState,
+			BabeWorkerHandle<Block>,
 			Option<Telemetry>,
 		),
 	>,
@@ -168,7 +169,7 @@ pub fn new_partial(
 		})
 		.transpose()?;
 
-	let executor = sc_service::new_native_or_wasm_executor(&config);
+	let executor = sc_service::new_native_or_wasm_executor(config);
 
 	let (client, backend, keystore_container, task_manager) =
 		sc_service::new_full_parts::<Block, RuntimeApi, _>(
@@ -209,6 +210,7 @@ pub fn new_partial(
 	)?;
 
 	let slot_duration = babe_link.config().slot_duration();
+	let target_gas_price = eth.target_gas_price;
 	let (import_queue, babe_worker_handle) =
 		sc_consensus_babe::import_queue(sc_consensus_babe::ImportQueueParams {
 			link: babe_link.clone(),
@@ -224,8 +226,10 @@ pub fn new_partial(
 					*timestamp,
 					slot_duration,
 				);
+				let dynamic_fee =
+					fp_dynamic_fee::InherentDataProvider(U256::from(target_gas_price));
 
-				Ok((slot, timestamp))
+				Ok((slot, timestamp, dynamic_fee))
 			},
 			spawner: &task_manager.spawn_essential_handle(),
 			registry: config.prometheus_registry(),
@@ -235,53 +239,6 @@ pub fn new_partial(
 
 	let import_setup = (block_import, grandpa_link, babe_link);
 
-	let (rpc_extensions_builder, rpc_setup) = {
-		let (_, grandpa_link, _) = &import_setup;
-
-		let justification_stream = grandpa_link.justification_stream();
-		let shared_authority_set = grandpa_link.shared_authority_set().clone();
-		let shared_voter_state = grandpa::SharedVoterState::empty();
-		let shared_voter_state2 = shared_voter_state.clone();
-
-		let finality_proof_provider = grandpa::FinalityProofProvider::new_for_service(
-			backend.clone(),
-			Some(shared_authority_set.clone()),
-		);
-
-		let client = client.clone();
-		let pool = transaction_pool.clone();
-		let select_chain = select_chain.clone();
-		let keystore = keystore_container.keystore();
-		let chain_spec = config.chain_spec.cloned_box();
-
-		let rpc_backend = backend.clone();
-		let rpc_extensions_builder = move |deny_unsafe, subscription_executor| {
-			let deps = node_rpc::FullDeps {
-				client: client.clone(),
-				pool: pool.clone(),
-				select_chain: select_chain.clone(),
-				chain_spec: chain_spec.cloned_box(),
-				deny_unsafe,
-				babe: node_rpc::BabeDeps {
-					keystore: keystore.clone(),
-					babe_worker_handle: babe_worker_handle.clone(),
-				},
-				grandpa: node_rpc::GrandpaDeps {
-					shared_voter_state: shared_voter_state.clone(),
-					shared_authority_set: shared_authority_set.clone(),
-					justification_stream: justification_stream.clone(),
-					subscription_executor,
-					finality_provider: finality_proof_provider.clone(),
-				},
-				backend: rpc_backend.clone(),
-			};
-
-			node_rpc::create_full(deps).map_err(Into::into)
-		};
-
-		(rpc_extensions_builder, shared_voter_state2)
-	};
-
 	Ok(sc_service::PartialComponents {
 		client,
 		backend,
@@ -290,7 +247,7 @@ pub fn new_partial(
 		select_chain,
 		import_queue,
 		transaction_pool,
-		other: (rpc_extensions_builder, import_setup, rpc_setup, telemetry),
+		other: (import_setup, babe_worker_handle, telemetry),
 	})
 }
 
@@ -313,6 +270,7 @@ pub struct NewFullBase {
 /// Creates a full service from the configuration.
 pub fn new_full_base(
 	config: Configuration,
+	eth: EthConfiguration,
 	disable_hardware_benchmarks: bool,
 	with_startup_data: impl FnOnce(
 		&sc_consensus_babe::BabeBlockImport<Block, FullClient, FullGrandpaBlockImport>,
@@ -334,10 +292,10 @@ pub fn new_full_base(
 		keystore_container,
 		select_chain,
 		transaction_pool,
-		other: (rpc_builder, import_setup, rpc_setup, mut telemetry),
-	} = new_partial(&config)?;
+		other: (import_setup, babe_worker_handle, mut telemetry),
+	} = new_partial(&config, &eth)?;
 
-	let shared_voter_state = rpc_setup;
+	let shared_voter_state = grandpa::SharedVoterState::empty();
 	let auth_disc_publish_non_global_ips = config.network.allow_non_globals_in_dht;
 	let mut net_config = sc_network::config::FullNetworkConfiguration::new(&config.network);
 
@@ -376,13 +334,130 @@ pub fn new_full_base(
 	let prometheus_registry = config.prometheus_registry().cloned();
 	let enable_offchain_worker = config.offchain_worker.enabled;
 
+	// Frontier
+	let frontier_backend =
+		fc_db::kv::Backend::open(Arc::clone(&client), &config.database, &db_config_dir(&config))?;
+
+	let FrontierPartialComponents { filter_pool, fee_history_cache, fee_history_cache_limit } =
+		new_frontier_partial(&eth)?;
+
+	let overrides = fc_storage::overrides_handle(client.clone());
+	let block_data_cache = Arc::new(fc_rpc::EthBlockDataCacheTask::new(
+		task_manager.spawn_handle(),
+		overrides.clone(),
+		eth.eth_log_block_cache,
+		eth.eth_statuses_cache,
+		prometheus_registry.clone(),
+	));
+
+	// Sinks for pubsub notifications.
+	// Everytime a new subscription is created, a new mpsc channel is added to the sink pool.
+	// The MappingSyncWorker sends through the channel on block import and the subscription emits a
+	// notification to the subscriber on receiving a message through this channel. This way we avoid
+	// race conditions when using native substrate block import notification stream.
+	let pubsub_notification_sinks: fc_mapping_sync::EthereumBlockNotificationSinks<
+		fc_mapping_sync::EthereumBlockNotification<Block>,
+	> = Default::default();
+	let pubsub_notification_sinks = Arc::new(pubsub_notification_sinks);
+
+	let rpc_client = client.clone();
+	let rpc_network = network.clone();
+	let rpc_backend = backend.clone();
+	let rpc_keystore = keystore_container.keystore();
+	let rpc_chain_spec = config.chain_spec.cloned_box();
+	let rpc_pool = transaction_pool.clone();
+	let rpc_filter_pool = filter_pool.clone();
+	let rpc_fee_history_cache = fee_history_cache.clone();
+	let rpc_sync_service = sync_service.clone();
+	let rpc_frontier_backend = frontier_backend.clone();
+	let rpc_overrides = overrides.clone();
+	let rpc_pubsub_notification_sinks = pubsub_notification_sinks.clone();
+	let rpc_select_chain = select_chain.clone();
+	let rpc_shared_voter_state = shared_voter_state.clone();
+	let is_authority = role.is_authority();
+	let enable_dev_signer = eth.enable_dev_signer;
+	let max_past_logs = eth.max_past_logs;
+	let execute_gas_limit_multiplier = eth.execute_gas_limit_multiplier;
+	let slot_duration = import_setup.2.config().slot_duration();
+	let target_gas_price = eth.target_gas_price;
+	let pending_create_inherent_data_providers = move |_, ()| async move {
+		let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+
+		let slot =
+			sp_consensus_babe::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
+				*timestamp,
+				slot_duration,
+			);
+		let dynamic_fee = fp_dynamic_fee::InherentDataProvider(U256::from(target_gas_price));
+
+		Ok((slot, timestamp, dynamic_fee))
+	};
+
+	let subscription_task_executor = Arc::new(task_manager.spawn_handle());
+	let justification_stream = import_setup.1.justification_stream();
+	let shared_authority_set = import_setup.1.shared_authority_set().clone();
+	let finality_proof_provider = grandpa::FinalityProofProvider::new_for_service(
+		backend.clone(),
+		Some(import_setup.1.shared_authority_set().clone()),
+	);
+	let rpc_extensions_builder = move |deny_unsafe, subscription_executor| {
+		let eth_deps = node_rpc::EthDeps {
+			client: rpc_client.clone(),
+			pool: rpc_pool.clone(),
+			graph: rpc_pool.pool().clone(),
+			converter: Some(TransactionConverter),
+			is_authority,
+			enable_dev_signer,
+			network: rpc_network.clone(),
+			sync: rpc_sync_service.clone(),
+			frontier_backend: Arc::new(rpc_frontier_backend.clone()),
+			overrides: rpc_overrides.clone(),
+			block_data_cache: block_data_cache.clone(),
+			filter_pool: rpc_filter_pool.clone(),
+			max_past_logs,
+			fee_history_cache: rpc_fee_history_cache.clone(),
+			fee_history_cache_limit,
+			execute_gas_limit_multiplier,
+			forced_parent_hashes: None,
+			pending_create_inherent_data_providers,
+		};
+
+		let deps = node_rpc::FullDeps {
+			client: rpc_client.clone(),
+			pool: rpc_pool.clone(),
+			select_chain: rpc_select_chain.clone(),
+			chain_spec: rpc_chain_spec.cloned_box(),
+			deny_unsafe,
+			babe: node_rpc::BabeDeps {
+				keystore: rpc_keystore.clone(),
+				babe_worker_handle: babe_worker_handle.clone(),
+			},
+			grandpa: node_rpc::GrandpaDeps {
+				shared_voter_state: rpc_shared_voter_state.clone(),
+				shared_authority_set: shared_authority_set.clone(),
+				justification_stream: justification_stream.clone(),
+				subscription_executor,
+				finality_provider: finality_proof_provider.clone(),
+			},
+			backend: rpc_backend.clone(),
+			eth: eth_deps,
+		};
+
+		node_rpc::create_full(
+			deps,
+			subscription_task_executor.clone(),
+			rpc_pubsub_notification_sinks.clone(),
+		)
+		.map_err(Into::into)
+	};
+
 	let rpc_handlers = sc_service::spawn_tasks(sc_service::SpawnTasksParams {
 		config,
 		backend: backend.clone(),
 		client: client.clone(),
 		keystore: keystore_container.keystore(),
 		network: network.clone(),
-		rpc_builder: Box::new(rpc_builder),
+		rpc_builder: Box::new(rpc_extensions_builder),
 		transaction_pool: transaction_pool.clone(),
 		task_manager: &mut task_manager,
 		system_rpc_tx,
@@ -390,6 +465,19 @@ pub fn new_full_base(
 		sync_service: sync_service.clone(),
 		telemetry: telemetry.as_mut(),
 	})?;
+
+	spawn_frontier_tasks(
+		&task_manager,
+		client.clone(),
+		backend.clone(),
+		fc_db::Backend::KeyValue(frontier_backend),
+		filter_pool,
+		overrides,
+		fee_history_cache,
+		fee_history_cache_limit,
+		sync_service.clone(),
+		pubsub_notification_sinks,
+	);
 
 	if let Some(hwbench) = hwbench {
 		sc_sysinfo::print_hwbench(&hwbench);
@@ -578,7 +666,7 @@ pub fn new_full_base(
 /// Builds a new service for a full client.
 pub fn new_full(config: Configuration, cli: Cli) -> Result<TaskManager, ServiceError> {
 	let database_source = config.database.clone();
-	let task_manager = new_full_base(config, cli.no_hardware_benchmarks, |_, _| ())
+	let task_manager = new_full_base(config, cli.eth, cli.no_hardware_benchmarks, |_, _| ())
 		.map(|NewFullBase { task_manager, .. }| task_manager)?;
 
 	sc_storage_monitor::StorageMonitorService::try_spawn(
@@ -593,7 +681,10 @@ pub fn new_full(config: Configuration, cli: Cli) -> Result<TaskManager, ServiceE
 
 #[cfg(test)]
 mod tests {
-	use crate::service::{new_full_base, NewFullBase};
+	use crate::{
+		cli::EthConfiguration,
+		service::{new_full_base, NewFullBase},
+	};
 	use codec::Encode;
 	use kitchensink_runtime::{
 		constants::{currency::CENTS, time::SLOT_DURATION},
@@ -653,9 +744,11 @@ mod tests {
 			chain_spec,
 			|config| {
 				let mut setup_handles = None;
+				let eth_configuration = EthConfiguration { ..Default::default() };
 				let NewFullBase { task_manager, client, network, sync, transaction_pool, .. } =
 					new_full_base(
 						config,
+						eth_configuration,
 						false,
 						|block_import: &sc_consensus_babe::BabeBlockImport<Block, _, _>,
 						 babe_link: &sc_consensus_babe::BabeLink<Block>| {
@@ -841,8 +934,9 @@ mod tests {
 		sc_service_test::consensus(
 			crate::chain_spec::tests::integration_test_config_with_two_authorities(),
 			|config| {
+				let eth_configuration = EthConfiguration { ..Default::default() };
 				let NewFullBase { task_manager, client, network, sync, transaction_pool, .. } =
-					new_full_base(config, false, |_, _| ())?;
+					new_full_base(config, eth_configuration, false, |_, _| ())?;
 				Ok(sc_service_test::TestNetComponents::new(
 					task_manager,
 					client,

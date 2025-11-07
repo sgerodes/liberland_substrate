@@ -1387,6 +1387,7 @@ impl pallet_llm::Config for Runtime {
 	type InflationEventInterval = InflationEventInterval;
 	type InflationEventReleaseFactor = InflationEventReleaseFactor;
 	type SenateOrigin = EitherOfDiverse<EnsureRoot<AccountId>, EnsureSenateMajority>;
+	type PeaceAccordsOrigin = frame_system::EnsureRoot<AccountId>;
 	type OnLLMPoliticsUnlock = OnLLMPoliticsUnlock;
 	type WeightInfo = ();
 	type MaxCourts = ConstU32<2>;

@@ -33,7 +33,7 @@ Accounts may freely transfer their not-locked LLM to other accounts.
 
 * **Treasury**:
     * gets `PreReleasedAmount` LLM on genesis and 10% of **Vault** balance periodically (_LLM Release Event_)
-    * derived from PalletID `lltreasu`: `5EYCAe5hveooUENA5d7dwq3caqM4LLBzktNumMKmhNRXu4JE`
+    * derived from PalletID `councilc`: `5EYCAe5g8CDuMsTief7QBxfvzDFEfws6ueXTUhsbx5V81nGH`
 
 * **Vault**:
     * gets initial supply of LLM on genesis

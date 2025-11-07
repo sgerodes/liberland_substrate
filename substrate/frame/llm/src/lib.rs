@@ -61,7 +61,7 @@ pub mod pallet {
 
 	pub type RemarkData = BoundedVec<u8, ConstU32<256>>;
 
-	/// block number of last LLM release event (transfer from **Vault** to **Treasury**)
+	/// block number of last LLM release event (transfer from **Vault** to **Council**)
 	#[pallet::storage]
 	#[pallet::getter(fn last_release)]
 	pub(super) type LastRelease<T: Config> = StorageValue<_, BlockNumberFor<T>, ValueQuery>; // ValueQuery ,  OnEmpty = 0
@@ -175,6 +175,9 @@ pub mod pallet {
 
 		/// Senate origin - can transfer from treasury
 		type SenateOrigin: EnsureOrigin<Self::RuntimeOrigin>;
+
+		// Temporary peace accords origin
+		type PeaceAccordsOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 
 		#[pallet::constant]
 		type AssetId: Get<<Self as pallet_assets::Config>::AssetId>;
@@ -302,7 +305,7 @@ pub mod pallet {
 			to_account: T::AccountId,
 			amount: BalanceOfAssets<T>,
 		) -> DispatchResult {
-			T::SenateOrigin::ensure_origin(origin)?;
+			T::PeaceAccordsOrigin::ensure_origin(origin)?;
 			Self::transfer_from_treasury(to_account, amount)
 		}
 
@@ -320,7 +323,7 @@ pub mod pallet {
 			to_account: T::AccountId,
 			amount: BalanceOfAssets<T>,
 		) -> DispatchResult {
-			T::SenateOrigin::ensure_origin(origin)?;
+			T::PeaceAccordsOrigin::ensure_origin(origin)?;
 
 			Self::transfer_from_treasury(to_account.clone(), amount)?;
 			Self::do_politics_lock(to_account, amount)
@@ -377,7 +380,7 @@ pub mod pallet {
 			to_account: T::AccountId,
 			amount: <<T as Config>::Currency as Currency<T::AccountId>>::Balance,
 		) -> DispatchResult {
-			T::SenateOrigin::ensure_origin(origin)?;
+			T::PeaceAccordsOrigin::ensure_origin(origin)?;
 			<T as Config>::Currency::transfer(
 				&Self::get_llm_treasury_account(),
 				&to_account,
@@ -599,7 +602,7 @@ pub mod pallet {
 		/// prereleased amount of LLM on genesis and part of LLM from **Vault**
 		/// on LLM Release Events.
 		pub fn get_llm_treasury_account() -> T::AccountId {
-			PalletId(*b"lltreasu").into_account_truncating()
+			PalletId(*b"councilc").into_account_truncating()
 		}
 
 		/// AccountId of **Politipool** account. **Politipool** account stores

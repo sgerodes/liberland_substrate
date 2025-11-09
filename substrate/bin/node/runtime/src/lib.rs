@@ -341,7 +341,7 @@ impl frame_system::Config for Runtime {
 #[cfg(not(feature = "testnet-runtime"))]
 parameter_types! {
 	pub const LaunchPeriod: BlockNumber = 14 * DAYS;
-	pub const VotingPeriod: BlockNumber = 14 * DAYS;
+	pub const VotingPeriod: BlockNumber = 70 * DAYS;
 	pub const TermDuration: BlockNumber = 3 * 30 * DAYS;
 	pub const EnactmentPeriod: BlockNumber = 14 * DAYS;
 	pub const AssetName: &'static str = "Liberland Merit";
@@ -862,7 +862,7 @@ impl pallet_bags_list::Config<VoterBagsListInstance> for Runtime {
 }
 
 parameter_types! {
-	pub const FastTrackVotingPeriod: BlockNumber = 3 * DAYS;
+	pub const FastTrackVotingPeriod: BlockNumber = 75 * DAYS;
 	pub const MinimumDeposit: Balance = 10 * GRAINS_IN_LLM;
 	pub const CooloffPeriod: BlockNumber = 7 * DAYS;
 	pub const MaxProposals: u32 = 100;

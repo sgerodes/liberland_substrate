@@ -4459,7 +4459,7 @@ dependencies = [
 
 [[package]]
 name = "kitchensink-runtime"
-version = "33.0.0"
+version = "34.0.0"
 dependencies = [
  "bridge-data-signer",
  "bridge-types",
@@ -5823,7 +5823,7 @@ dependencies = [
 
 [[package]]
 name = "node-cli"
-version = "33.0.0"
+version = "34.0.0"
 dependencies = [
  "array-bytes",
  "assert_cmd",

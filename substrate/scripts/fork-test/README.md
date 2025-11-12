@@ -44,14 +44,14 @@ Checkout repository for version you want to test. For example, if we're testing 
    * copy it to tmp to make it easier:  `cp mainnet-v28.0.0.wasm /tmp/mainnet-v28.0.0.wasm`
    * if building runtime yourself,
      * Checkout the branch with the newer version to test (v28 in this example)and build it `cargo build --release --features metadata-hash`
-     * Copy to tmp `cp ./target/release/wbuild/kitchensink-runtime/kitchensink_runtime.compact.compressed.wasm ./substrate/scripts/fork-test/liberland-fork-substrate/tmp/liberland-testnet-v28.0.0.wasm`
+     * Copy to tmp `cp ./target/release/wbuild/kitchensink-runtime/kitchensink_runtime.compact.compressed.wasm ./substrate/scripts/fork-test/liberland-fork-substrate/tmp/liberland-mainnet-v28.0.0.wasm`
 5. Checkout repository for version you want to test. For example, if we're testing runtime `v28.0.0`, checkout tag `v28.0.0`.
 6. Make sure you're not running another instance of Liberland Network - port 9944 should be free.
 7. Run the forked network:
    ```sh
-   cd scripts/fork-test/
-   export BINARY=/tmp/liberland-mainnet-v27.0.0
-   export RUNTIME=/tmp/mainnet-v28.0.0.wasm
+   cd substrate/scripts/fork-test/
+   export BINARY=./tmp/liberland-mainnet-v27.0.0
+   export RUNTIME=./tmp/mainnet-v28.0.0.wasm
    ./run-fork.sh mainnet.config.sh
    ```
 8. Test the chain: https://polkadot.js.org/apps/?rpc=ws://localhost:9944
